@@ -36,3 +36,11 @@ cli.add_command(watch)
 from icu.cli.hook import hook  # noqa: E402
 
 cli.add_command(hook)
+
+from icu.cli.rules import rules  # noqa: E402
+
+cli.add_command(rules)
+
+from icu.cli.init_cmd import init_cmd  # noqa: E402
+
+cli.add_command(init_cmd)

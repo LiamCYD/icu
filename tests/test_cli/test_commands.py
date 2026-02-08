@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from icu.cli.main import cli
@@ -91,3 +92,57 @@ class TestScanCommand:
         result = self.runner.invoke(cli, ["scan", "--help"])
         assert result.exit_code == 0
         assert "Scan a file or directory" in result.output
+
+
+class TestRulesCommand:
+    def setup_method(self) -> None:
+        self.runner = CliRunner()
+
+    def test_list_all(self) -> None:
+        result = self.runner.invoke(cli, ["rules"])
+        assert result.exit_code == 0
+
+    def test_filter_category(self) -> None:
+        result = self.runner.invoke(
+            cli, ["rules", "--category", "prompt_injection"],
+        )
+        assert result.exit_code == 0
+
+    def test_filter_severity(self) -> None:
+        result = self.runner.invoke(
+            cli, ["rules", "--severity", "critical"],
+        )
+        assert result.exit_code == 0
+
+    def test_search(self) -> None:
+        result = self.runner.invoke(
+            cli, ["rules", "--search", "ssh"],
+        )
+        assert result.exit_code == 0
+
+
+class TestInitCommand:
+    def setup_method(self) -> None:
+        self.runner = CliRunner()
+
+    def test_creates_policy_and_hook(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        (tmp_path / ".git" / "hooks").mkdir(parents=True)
+        monkeypatch.chdir(tmp_path)
+        result = self.runner.invoke(cli, ["init"])
+        assert result.exit_code == 0
+        assert (tmp_path / ".icu-policy.yml").exists()
+        assert (tmp_path / ".git" / "hooks" / "pre-commit").exists()
+
+    def test_works_without_git(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        result = self.runner.invoke(cli, ["init"])
+        assert result.exit_code == 0
+        assert (tmp_path / ".icu-policy.yml").exists()

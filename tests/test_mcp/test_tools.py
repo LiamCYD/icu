@@ -6,7 +6,13 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from icu.mcp.server import check_content, lookup_hash, scan_directory, scan_file
+from icu.mcp.server import (
+    check_content,
+    list_rules,
+    lookup_hash,
+    scan_directory,
+    scan_file,
+)
 from icu.reputation.database import ReputationDB
 from icu.reputation.models import Signature
 
@@ -150,3 +156,28 @@ class TestLookupHash:
             raw = lookup_hash("c" * 64)
         result = json.loads(raw)
         assert "error" in result
+
+
+class TestListRules:
+    def test_returns_all_rules(self) -> None:
+        raw = list_rules()
+        result = json.loads(raw)
+        assert result["total"] == 37
+        assert result["showing"] == 37
+        assert len(result["rules"]) == 37
+
+    def test_filter_by_category(self) -> None:
+        raw = list_rules(category="obfuscation")
+        result = json.loads(raw)
+        assert result["showing"] < result["total"]
+        assert all(
+            r["category"] == "obfuscation" for r in result["rules"]
+        )
+
+    def test_filter_by_severity(self) -> None:
+        raw = list_rules(severity="critical")
+        result = json.loads(raw)
+        assert result["showing"] < result["total"]
+        assert all(
+            r["severity"] == "critical" for r in result["rules"]
+        )

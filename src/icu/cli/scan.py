@@ -8,7 +8,11 @@ import click
 
 from icu.analyzer.models import RISK_LEVEL_ORDER, ScanResult
 from icu.analyzer.scanner import Scanner
-from icu.utils.formatting import get_console, print_scan_result
+from icu.utils.formatting import (
+    get_console,
+    print_scan_result,
+    print_scan_summary,
+)
 
 
 @click.command()
@@ -32,7 +36,19 @@ from icu.utils.formatting import get_console, print_scan_result
     default=False,
     help="Disable reputation database.",
 )
-def scan(target: str, depth: str, output_format: str, no_db: bool) -> None:
+@click.option(
+    "--max-size",
+    type=int,
+    default=1_048_576,
+    help="Max file size in bytes (default: 1048576 = 1 MB).",
+)
+def scan(
+    target: str,
+    depth: str,
+    output_format: str,
+    no_db: bool,
+    max_size: int,
+) -> None:
     """Scan a file or directory for threats."""
     from icu.reputation.database import ReputationDB
 
@@ -44,7 +60,7 @@ def scan(target: str, depth: str, output_format: str, no_db: bool) -> None:
             pass
 
     try:
-        scanner = Scanner(db=db)
+        scanner = Scanner(db=db, max_file_size=max_size)
         target_path = Path(target)
         console = get_console()
 
@@ -78,6 +94,8 @@ def scan(target: str, depth: str, output_format: str, no_db: bool) -> None:
 def _output_table(results: list[ScanResult], console: object) -> None:
     for result in results:
         print_scan_result(result)
+    if len(results) > 1:
+        print_scan_summary(results)
 
 
 def _output_json(results: list[ScanResult]) -> None:

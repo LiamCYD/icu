@@ -170,6 +170,53 @@ def format_signature(sig: Signature) -> Panel:
     return Panel(table, title=title, border_style=risk_color)
 
 
+def format_scan_summary(results: list[ScanResult]) -> Panel:
+    """Format aggregate statistics for a batch of scan results."""
+    counts = {
+        "clean": 0,
+        "low": 0,
+        "medium": 0,
+        "high": 0,
+        "critical": 0,
+    }
+    for r in results:
+        counts[r.risk_level] = counts.get(r.risk_level, 0) + 1
+
+    total_ms = sum(r.scan_time_ms for r in results)
+    cached = sum(1 for r in results if r.cached)
+
+    table = Table(show_header=False, padding=(0, 1))
+    table.add_column("Label", style="bold", width=14)
+    table.add_column("Value")
+
+    table.add_row("Files scanned", str(len(results)))
+    for level in ("clean", "low", "medium", "high", "critical"):
+        color = RISK_COLORS.get(level, "white")
+        table.add_row(
+            level.capitalize(),
+            Text(str(counts[level]), style=color),
+        )
+    table.add_row("Cached", str(cached))
+    table.add_row("Total time", f"{total_ms:.1f}ms")
+
+    if counts["high"] or counts["critical"]:
+        border = "red"
+    elif counts["medium"]:
+        border = "yellow"
+    else:
+        border = "green"
+
+    return Panel(
+        table,
+        title=Text("Scan Summary", style="bold"),
+        border_style=border,
+    )
+
+
+def print_scan_summary(results: list[ScanResult]) -> None:
+    _console.print(format_scan_summary(results))
+
+
 def format_threat_signature_table(sigs: list[ThreatSignature]) -> Table:
     """Format a list of ThreatSignatures as a Rich Table."""
     table = Table(show_header=True, expand=True, padding=(0, 1))

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Literal
 
@@ -25,6 +27,8 @@ _SKIP_EXTENSIONS = frozenset({
     ".zip", ".tar", ".gz", ".bz2",
 })
 
+_DEFAULT_MAX_FILE_SIZE = 1_048_576  # 1 MB
+
 
 class Scanner:
     """Core scan orchestrator implementing the tiered pipeline."""
@@ -33,9 +37,15 @@ class Scanner:
         self,
         db: ReputationDB | None = None,
         cache: HashCache | None = None,
+        max_file_size: int = _DEFAULT_MAX_FILE_SIZE,
+        max_workers: int | None = None,
     ) -> None:
         self._db = db
         self._cache = cache or HashCache()
+        self._max_file_size = max_file_size
+        self._max_workers = max_workers or min(
+            4, os.cpu_count() or 1
+        )
 
         if db is not None:
             try:
@@ -80,6 +90,17 @@ class Scanner:
                 findings=(),
                 scan_time_ms=_elapsed_ms(start),
             )
+
+        try:
+            if path.stat().st_size > self._max_file_size:
+                return ScanResult(
+                    file_path=str(path),
+                    risk_level="clean",
+                    findings=(),
+                    scan_time_ms=_elapsed_ms(start),
+                )
+        except OSError:
+            pass
 
         # Stage 1: Hash check
         file_hash = hash_file(path)
@@ -198,15 +219,27 @@ class Scanner:
         depth: ScanDepth = "auto",
     ) -> list[ScanResult]:
         path = Path(path)
-        results: list[ScanResult] = []
 
         if not path.is_dir():
             return [self.scan_file(path, depth=depth)]
 
-        for child in sorted(path.rglob("*")):
-            if child.is_file() and not _should_skip_path(child):
-                results.append(self.scan_file(child, depth=depth))
+        files = sorted(
+            c for c in path.rglob("*")
+            if c.is_file() and not _should_skip_path(c)
+        )
 
+        results: list[ScanResult] = []
+        with ThreadPoolExecutor(
+            max_workers=self._max_workers
+        ) as pool:
+            futures = {
+                pool.submit(self.scan_file, f, depth): f
+                for f in files
+            }
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        results.sort(key=lambda r: r.file_path)
         return results
 
 

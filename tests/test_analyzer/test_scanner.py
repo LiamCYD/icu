@@ -155,3 +155,60 @@ class TestScannerSHA256:
         result = scanner.scan_file(clean_dir / "normal_tool.py")
         assert len(result.sha256) == 64
         assert all(c in "0123456789abcdef" for c in result.sha256)
+
+
+class TestFileSizeGuard:
+    def test_large_file_skipped(self, tmp_path: Path) -> None:
+        big = tmp_path / "big.py"
+        big.write_text("x = 1\n" * 200_000)  # ~1.2 MB
+        scanner = Scanner(db=None, max_file_size=1_048_576)
+        result = scanner.scan_file(big)
+        assert result.risk_level == "clean"
+        assert len(result.findings) == 0
+
+    def test_normal_file_scanned(
+        self, scanner: Scanner, clean_dir: Path,
+    ) -> None:
+        result = scanner.scan_file(clean_dir / "normal_tool.py")
+        # Should actually scan (not skipped)
+        assert result.sha256 != ""
+
+    def test_custom_max_file_size(self, tmp_path: Path) -> None:
+        small = tmp_path / "small.py"
+        small.write_text("x = 1\n" * 100)  # ~600 bytes
+        scanner = Scanner(db=None, max_file_size=500)
+        result = scanner.scan_file(small)
+        # File > 500 bytes, should be skipped
+        assert result.risk_level == "clean"
+        assert result.sha256 == ""
+
+
+class TestParallelScanning:
+    def test_results_complete(
+        self, scanner: Scanner, malicious_dir: Path,
+    ) -> None:
+        results = scanner.scan_directory(malicious_dir)
+        file_paths = {r.file_path for r in results}
+        # Should contain all scannable files
+        assert len(file_paths) == len(results)
+        assert len(results) > 0
+
+    def test_empty_directory(self, tmp_path: Path) -> None:
+        scanner = Scanner(db=None)
+        results = scanner.scan_directory(tmp_path)
+        assert results == []
+
+    def test_matches_serial_results(self, clean_dir: Path) -> None:
+        serial = Scanner(db=None, max_workers=1)
+        parallel = Scanner(db=None, max_workers=4)
+        r_serial = serial.scan_directory(clean_dir)
+        r_parallel = parallel.scan_directory(clean_dir)
+        assert len(r_serial) == len(r_parallel)
+        serial_paths = sorted(r.file_path for r in r_serial)
+        parallel_paths = sorted(r.file_path for r in r_parallel)
+        assert serial_paths == parallel_paths
+
+    def test_max_workers_one(self, clean_dir: Path) -> None:
+        scanner = Scanner(db=None, max_workers=1)
+        results = scanner.scan_directory(clean_dir)
+        assert all(r.risk_level == "clean" for r in results)
