@@ -39,35 +39,54 @@ from icu.utils.formatting import (
 @click.option(
     "--max-size",
     type=int,
-    default=1_048_576,
+    default=None,
     help="Max file size in bytes (default: 1048576 = 1 MB).",
+)
+@click.option(
+    "--exclude",
+    multiple=True,
+    help="Glob pattern to exclude (repeatable).",
 )
 def scan(
     target: str,
     depth: str,
     output_format: str,
     no_db: bool,
-    max_size: int,
+    max_size: int | None,
+    exclude: tuple[str, ...],
 ) -> None:
     """Scan a file or directory for threats."""
+    from icu.config import load_config
     from icu.reputation.database import ReputationDB
 
+    cfg = load_config()
+    eff_depth = depth if depth != "auto" else cfg.depth
+    eff_max_size = max_size if max_size is not None else cfg.max_file_size
+    eff_no_db = no_db or cfg.no_db
+    eff_exclude = exclude + cfg.exclude
+
+    console = get_console()
     db = None
-    if not no_db:
+    if not eff_no_db:
         try:
             db = ReputationDB()
-        except Exception:
-            pass
+        except Exception as exc:
+            console.print(
+                f"[dim]Warning: reputation DB unavailable: {exc}[/dim]"
+            )
 
     try:
-        scanner = Scanner(db=db, max_file_size=max_size)
+        scanner = Scanner(
+            db=db,
+            max_file_size=eff_max_size,
+            exclude=eff_exclude,
+        )
         target_path = Path(target)
-        console = get_console()
 
         if target_path.is_dir():
-            results = scanner.scan_directory(target_path, depth=depth)  # type: ignore[arg-type]
+            results = scanner.scan_directory(target_path, depth=eff_depth)  # type: ignore[arg-type]
         else:
-            results = [scanner.scan_file(target_path, depth=depth)]  # type: ignore[arg-type]
+            results = [scanner.scan_file(target_path, depth=eff_depth)]  # type: ignore[arg-type]
 
         if output_format == "json":
             _output_json(results)

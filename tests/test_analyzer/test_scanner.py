@@ -183,6 +183,41 @@ class TestFileSizeGuard:
         assert result.sha256 == ""
 
 
+class TestExcludePatterns:
+    def test_exclude_by_name(self, tmp_path: Path) -> None:
+        f = tmp_path / "secret.log"
+        f.write_text("x = 1")
+        scanner = Scanner(db=None, exclude=("*.log",))
+        result = scanner.scan_file(f)
+        assert result.risk_level == "clean"
+        assert result.sha256 == ""  # skipped, no hash
+
+    def test_exclude_by_path(self, tmp_path: Path) -> None:
+        sub = tmp_path / "vendor"
+        sub.mkdir()
+        f = sub / "lib.py"
+        f.write_text("x = 1")
+        scanner = Scanner(db=None, exclude=("*/vendor/*",))
+        result = scanner.scan_file(f)
+        assert result.sha256 == ""  # skipped
+
+    def test_non_matching_pattern_scans(self, tmp_path: Path) -> None:
+        f = tmp_path / "app.py"
+        f.write_text("x = 1")
+        scanner = Scanner(db=None, exclude=("*.log",))
+        result = scanner.scan_file(f)
+        assert result.sha256 != ""  # was actually scanned
+
+    def test_directory_excludes(self, tmp_path: Path) -> None:
+        (tmp_path / "keep.py").write_text("x = 1")
+        (tmp_path / "skip.log").write_text("x = 1")
+        scanner = Scanner(db=None, exclude=("*.log",))
+        results = scanner.scan_directory(tmp_path)
+        paths = [r.file_path for r in results]
+        assert any("keep.py" in p for p in paths)
+        assert not any("skip.log" in p for p in paths)
+
+
 class TestParallelScanning:
     def test_results_complete(
         self, scanner: Scanner, malicious_dir: Path,
