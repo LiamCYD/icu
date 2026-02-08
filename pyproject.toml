@@ -23,6 +23,7 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.1",
     "mypy>=1.6",
+    "types-PyYAML>=6.0",
     "mcp[cli]>=1.2",
 ]
 mcp = [
