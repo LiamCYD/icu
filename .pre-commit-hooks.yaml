@@ -1,0 +1,5 @@
+- id: icu-scan
+  name: ICU Security Scan
+  entry: icu scan
+  language: python
+  types: [text]

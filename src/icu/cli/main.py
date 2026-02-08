@@ -28,3 +28,11 @@ from icu.cli.reputation import lookup, reputation  # noqa: E402
 
 cli.add_command(lookup)
 cli.add_command(reputation)
+
+from icu.cli.watch import watch  # noqa: E402
+
+cli.add_command(watch)
+
+from icu.cli.hook import hook  # noqa: E402
+
+cli.add_command(hook)
