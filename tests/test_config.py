@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from icu.config import ICUConfig, load_config, load_icuignore
 
 
@@ -92,3 +94,19 @@ class TestLoadICUIgnore:
         subdir.mkdir(parents=True)
         patterns = load_icuignore(start=subdir)
         assert "*.log" in patterns
+
+
+class TestEnvVarConfig:
+    def test_icu_depth_env(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("ICU_DEPTH", "fast")
+        cfg = load_config(start=tmp_path)
+        assert cfg.depth == "fast"
+
+    def test_icu_max_size_env(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("ICU_MAX_SIZE", "500000")
+        cfg = load_config(start=tmp_path)
+        assert cfg.max_file_size == 500000

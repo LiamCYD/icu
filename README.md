@@ -48,6 +48,8 @@ Options:
 - `--format [table|json|sarif]` — Output format (default: `table`)
 - `--max-size BYTES` — Max file size in bytes (default: 1 MB)
 - `--exclude PATTERN` — Glob pattern to exclude (repeatable)
+- `--workers N` — Max worker threads for directory scanning
+- `--policy FILE` — Policy YAML file to evaluate results against
 - `--no-db` — Disable reputation database
 
 Exit codes: `0` clean, `1` medium risk, `2` high/critical risk.
@@ -63,6 +65,7 @@ icu watch ./src --depth fast --exclude "*.tmp"
 Options:
 - `--depth [fast|deep|auto]` — Scan depth
 - `--policy FILE` — Policy YAML to evaluate results against
+- `--max-size BYTES` — Max file size in bytes (default: 1 MB)
 - `--exclude PATTERN` — Glob pattern to exclude (repeatable)
 - `--no-db` — Disable reputation database
 
@@ -130,6 +133,17 @@ exclude:
 no_db: false
 ```
 
+### Environment Variables
+
+ICU also reads configuration from environment variables (between YAML config and CLI flags in precedence):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `ICU_DEPTH` | Default scan depth | `fast`, `deep`, `auto` |
+| `ICU_MAX_SIZE` | Max file size in bytes | `2097152` |
+| `ICU_NO_DB` | Disable reputation DB | `1`, `true`, `yes` |
+| `ICU_POLICY` | Path to policy YAML | `/path/to/policy.yml` |
+
 ### `.icuignore`
 
 Create a `.icuignore` file (gitignore-style) to exclude patterns:
@@ -149,7 +163,7 @@ ICU ships an MCP server for AI assistant integration:
 icu-mcp
 ```
 
-Available tools: `scan_file`, `scan_directory`, `check_content`, `lookup_hash`, `list_rules`.
+Available tools: `scan_file`, `scan_directory`, `check_content`, `check_policy`, `lookup_hash`, `list_rules`.
 
 ## Pre-commit Framework
 

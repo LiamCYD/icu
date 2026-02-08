@@ -42,15 +42,6 @@ CREATE TABLE IF NOT EXISTS threat_signatures (
     source          TEXT DEFAULT 'local'
 );
 
-CREATE TABLE IF NOT EXISTS behavioral_profiles (
-    sha256          TEXT PRIMARY KEY,
-    syscalls        TEXT,
-    network_hosts   TEXT,
-    files_accessed  TEXT,
-    profile_date    DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sha256) REFERENCES signatures(sha256)
-);
-
 CREATE TABLE IF NOT EXISTS scan_log (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     sha256          TEXT,
@@ -230,6 +221,57 @@ class ReputationDB:
             "SELECT COUNT(*) AS cnt FROM threat_signatures"
         ).fetchone()
         return int(row["cnt"])
+
+    def get_stats(self) -> dict[str, object]:
+        """Return aggregate statistics about the reputation database."""
+        # Signatures count + clean/flagged breakdown
+        total_sigs = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM signatures"
+        ).fetchone()["cnt"]
+        clean_sigs = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM signatures WHERE flagged = 0"
+        ).fetchone()["cnt"]
+        flagged_sigs = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM signatures WHERE flagged = 1"
+        ).fetchone()["cnt"]
+
+        # Risk level breakdown
+        risk_rows = self._conn.execute(
+            "SELECT risk_level, COUNT(*) AS cnt FROM signatures "
+            "GROUP BY risk_level"
+        ).fetchall()
+        risk_breakdown: dict[str, int] = {
+            row["risk_level"]: row["cnt"] for row in risk_rows
+        }
+
+        # Threat signatures by category
+        cat_rows = self._conn.execute(
+            "SELECT category, COUNT(*) AS cnt FROM threat_signatures "
+            "GROUP BY category"
+        ).fetchall()
+        threat_by_category: dict[str, int] = {
+            row["category"]: row["cnt"] for row in cat_rows
+        }
+
+        # Total scans
+        total_scans = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM scan_log"
+        ).fetchone()["cnt"]
+
+        # Total threat signatures
+        total_threat_sigs = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM threat_signatures"
+        ).fetchone()["cnt"]
+
+        return {
+            "file_hashes": total_sigs,
+            "clean": clean_sigs,
+            "flagged": flagged_sigs,
+            "risk_breakdown": risk_breakdown,
+            "threat_signatures": total_threat_sigs,
+            "threat_by_category": threat_by_category,
+            "total_scans": total_scans,
+        }
 
     def get_scan_history(
         self, sha256: str, limit: int = 10

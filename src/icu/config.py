@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,6 +39,23 @@ def load_config(start: Path | None = None) -> ICUConfig:
         project_data = _read_yaml(project_path)
 
     merged = {**global_data, **project_data}
+
+    # Overlay environment variables (between YAML config and CLI flags)
+    env_depth = os.environ.get("ICU_DEPTH")
+    if env_depth is not None:
+        merged["depth"] = env_depth
+
+    env_max_size = os.environ.get("ICU_MAX_SIZE")
+    if env_max_size is not None:
+        merged["max_file_size"] = env_max_size
+
+    env_no_db = os.environ.get("ICU_NO_DB")
+    if env_no_db is not None:
+        merged["no_db"] = env_no_db.lower() in ("1", "true", "yes")
+
+    env_policy = os.environ.get("ICU_POLICY")
+    if env_policy is not None:
+        merged["policy_path"] = env_policy
 
     # Also load .icuignore patterns
     ignore_patterns = load_icuignore(start)

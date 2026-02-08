@@ -168,6 +168,43 @@ def lookup_hash(sha256: str) -> str:
 
 
 @mcp.tool()
+def check_policy(
+    path: str,
+    policy_yaml: str,
+    depth: str = "auto",
+    tool_name: str | None = None,
+) -> str:
+    """Scan a file and evaluate results against an inline policy.
+
+    Args:
+        path: Absolute or relative path to the file to scan.
+        policy_yaml: Policy definition as a YAML string.
+        depth: Scan depth — "fast", "deep", or "auto" (default).
+        tool_name: Optional tool name for policy override lookup.
+    """
+    try:
+        from icu.policy.engine import PolicyEngine
+        from icu.policy.loader import load_policy_from_string
+
+        policy = load_policy_from_string(policy_yaml)
+        engine = PolicyEngine(policy)
+
+        scanner = _get_scanner()
+        result = scanner.scan_file(path, depth=depth)  # type: ignore[arg-type]
+        policy_result = engine.evaluate(result, tool_name)
+
+        return json.dumps(
+            {
+                "scan": result.to_dict(),
+                "policy": policy_result.to_dict(),
+            },
+            indent=2,
+        )
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+
+@mcp.tool()
 def list_rules(
     category: str | None = None,
     severity: str | None = None,

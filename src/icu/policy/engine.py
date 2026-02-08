@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 from fnmatch import fnmatch
 from typing import TYPE_CHECKING
 
@@ -10,9 +11,12 @@ from icu.policy.models import (
     PolicyResult,
     PolicyViolation,
 )
+from icu.utils.logging import get_logger
 
 if TYPE_CHECKING:
     from icu.analyzer.models import ScanResult
+
+_log = get_logger("policy.engine")
 
 # Rule-ID prefixes that correspond to network / shell categories
 _NETWORK_PREFIXES = ("NS-", "DE-010", "DE-011", "DE-012")
@@ -31,10 +35,21 @@ class PolicyEngine:
         self._allow_patterns = tuple(
             os.path.expanduser(p) for p in policy.file_access.allow
         )
+        # Pre-expand network deny/allow patterns
+        self._net_deny_patterns = tuple(
+            os.path.expanduser(p) for p in policy.network.deny
+        )
+        self._net_allow_patterns = tuple(
+            os.path.expanduser(p) for p in policy.network.allow
+        )
 
     @property
     def policy(self) -> Policy:
         return self._policy
+
+    @property
+    def should_deep_scan(self) -> bool:
+        return self._policy.defaults.deep_scan
 
     def evaluate(
         self,
@@ -95,21 +110,47 @@ class PolicyEngine:
             )
 
         # 3. Network findings check
-        if not effective_allow_network:
-            for finding in scan_result.findings:
-                if any(
-                    finding.rule_id.startswith(p) for p in _NETWORK_PREFIXES
-                ):
-                    violations.append(
-                        PolicyViolation(
-                            rule="network",
-                            description=(
-                                f"Network-related finding [{finding.rule_id}]: "
-                                f"{finding.description}"
-                            ),
-                            severity=finding.severity,
-                        )
+        for finding in scan_result.findings:
+            if not any(
+                finding.rule_id.startswith(p) for p in _NETWORK_PREFIXES
+            ):
+                continue
+
+            matched = finding.matched_text or ""
+
+            # Deny always overrides — even when allow_network is True
+            if self._matches_net_deny(matched):
+                violations.append(
+                    PolicyViolation(
+                        rule="network_deny",
+                        description=(
+                            f"Network host '{matched}' matches a denied "
+                            f"pattern [{finding.rule_id}]"
+                        ),
+                        severity=finding.severity,
                     )
+                )
+                continue
+
+            # If network is allowed, skip further checks
+            if effective_allow_network:
+                continue
+
+            # If host matches an allow pattern, exempt it
+            if self._matches_net_allow(matched):
+                continue
+
+            # Otherwise, block the network finding
+            violations.append(
+                PolicyViolation(
+                    rule="network",
+                    description=(
+                        f"Network-related finding [{finding.rule_id}]: "
+                        f"{finding.description}"
+                    ),
+                    severity=finding.severity,
+                )
+            )
 
         # 4. Shell findings check
         if not effective_allow_shell:
@@ -139,8 +180,44 @@ class PolicyEngine:
             violations=tuple(violations),
         )
 
+    def log_violations(
+        self,
+        scan_results: list[ScanResult],
+        policy_results: list[PolicyResult],
+    ) -> None:
+        """Append violations to the configured log file, if any."""
+        log_file = self._policy.alerts.log_file
+        if log_file is None:
+            return
+
+        lines: list[str] = []
+        ts = datetime.now(UTC).isoformat()
+        for scan_result, policy_result in zip(scan_results, policy_results):
+            if policy_result.passed:
+                continue
+            for v in policy_result.violations:
+                lines.append(
+                    f"{ts} [{v.severity}] {scan_result.file_path}: "
+                    f"{v.rule} - {v.description}\n"
+                )
+
+        if not lines:
+            return
+
+        try:
+            with open(log_file, "a", encoding="utf-8") as fh:
+                fh.writelines(lines)
+        except OSError as exc:
+            _log.warning("Cannot write to log file %s: %s", log_file, exc)
+
     def _matches_deny(self, path: str) -> bool:
         return any(fnmatch(path, p) for p in self._deny_patterns)
 
     def _matches_allow(self, path: str) -> bool:
         return any(fnmatch(path, p) for p in self._allow_patterns)
+
+    def _matches_net_deny(self, host: str) -> bool:
+        return any(fnmatch(host, p) for p in self._net_deny_patterns)
+
+    def _matches_net_allow(self, host: str) -> bool:
+        return any(fnmatch(host, p) for p in self._net_allow_patterns)

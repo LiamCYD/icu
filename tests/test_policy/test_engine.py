@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import pytest
 
@@ -8,7 +9,9 @@ from icu.analyzer.models import Finding, ScanResult
 from icu.policy.defaults import default_policy
 from icu.policy.engine import PolicyEngine
 from icu.policy.models import (
+    AlertsConfig,
     FileAccessPolicy,
+    NetworkPolicy,
     Policy,
     PolicyDefaults,
     ToolOverride,
@@ -255,6 +258,142 @@ class TestCleanPass:
         assert result.passed
         assert result.action == "log"
         assert result.violations == ()
+
+
+class TestNetworkDenyAllow:
+    def test_deny_blocks_even_with_allow_network(self) -> None:
+        policy = Policy(
+            defaults=PolicyDefaults(allow_network=True),
+            file_access=FileAccessPolicy(deny=("x",)),
+            network=NetworkPolicy(deny=("*.onion",)),
+        )
+        engine = PolicyEngine(policy)
+        finding = Finding(
+            rule_id="NS-001",
+            description="Network call",
+            severity="danger",
+            file_path="test.py",
+            line_number=1,
+            matched_text="evil.onion",
+        )
+        result = engine.evaluate(_make_result(findings=(finding,)))
+        assert any(v.rule == "network_deny" for v in result.violations)
+
+    def test_allow_exempts_host(self) -> None:
+        policy = Policy(
+            defaults=PolicyDefaults(allow_network=False),
+            file_access=FileAccessPolicy(deny=("x",)),
+            network=NetworkPolicy(allow=("api.example.com",)),
+        )
+        engine = PolicyEngine(policy)
+        finding = Finding(
+            rule_id="NS-001",
+            description="Network call",
+            severity="danger",
+            file_path="test.py",
+            line_number=1,
+            matched_text="api.example.com",
+        )
+        result = engine.evaluate(_make_result(findings=(finding,)))
+        assert not any(v.rule == "network" for v in result.violations)
+
+    def test_non_allowed_still_blocked(self) -> None:
+        policy = Policy(
+            defaults=PolicyDefaults(allow_network=False),
+            file_access=FileAccessPolicy(deny=("x",)),
+            network=NetworkPolicy(allow=("api.example.com",)),
+        )
+        engine = PolicyEngine(policy)
+        finding = Finding(
+            rule_id="NS-001",
+            description="Network call",
+            severity="danger",
+            file_path="test.py",
+            line_number=1,
+            matched_text="evil.com",
+        )
+        result = engine.evaluate(_make_result(findings=(finding,)))
+        assert any(v.rule == "network" for v in result.violations)
+
+    def test_wildcard_deny(self) -> None:
+        policy = Policy(
+            defaults=PolicyDefaults(allow_network=True),
+            file_access=FileAccessPolicy(deny=("x",)),
+            network=NetworkPolicy(deny=("*.i2p",)),
+        )
+        engine = PolicyEngine(policy)
+        finding = Finding(
+            rule_id="NS-001",
+            description="Network call",
+            severity="danger",
+            file_path="test.py",
+            line_number=1,
+            matched_text="darksite.i2p",
+        )
+        result = engine.evaluate(_make_result(findings=(finding,)))
+        assert any(v.rule == "network_deny" for v in result.violations)
+
+    def test_empty_network_rules_unchanged(self, engine: PolicyEngine) -> None:
+        """Default policy with no network allow patterns works as before."""
+        finding = Finding(
+            rule_id="NS-001",
+            description="Network call",
+            severity="danger",
+            file_path="test.py",
+            line_number=1,
+            matched_text="curl",
+        )
+        result = engine.evaluate(
+            _make_result(findings=(finding,), risk_level="high")
+        )
+        assert any(v.rule == "network" for v in result.violations)
+
+
+class TestDeepScanProperty:
+    def test_default_deep_scan_true(self, engine: PolicyEngine) -> None:
+        assert engine.should_deep_scan is True
+
+    def test_deep_scan_false(self) -> None:
+        policy = Policy(
+            defaults=PolicyDefaults(deep_scan=False),
+            file_access=FileAccessPolicy(deny=("x",)),
+        )
+        engine = PolicyEngine(policy)
+        assert engine.should_deep_scan is False
+
+
+class TestLogViolations:
+    def test_writes_violations_to_log(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "violations.log"
+        policy = Policy(
+            defaults=PolicyDefaults(),
+            file_access=FileAccessPolicy(deny=("x",)),
+            alerts=AlertsConfig(log_file=str(log_file)),
+        )
+        engine = PolicyEngine(policy)
+        scan_result = _make_result(risk_level="high")
+        policy_result = engine.evaluate(scan_result)
+        assert not policy_result.passed
+
+        engine.log_violations([scan_result], [policy_result])
+        content = log_file.read_text()
+        assert "risk_level" in content
+        assert "test.py" in content
+
+    def test_no_log_when_passed(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "violations.log"
+        policy = Policy(
+            defaults=PolicyDefaults(),
+            file_access=FileAccessPolicy(deny=("x",)),
+            alerts=AlertsConfig(log_file=str(log_file)),
+        )
+        engine = PolicyEngine(policy)
+        scan_result = _make_result(risk_level="clean")
+        policy_result = engine.evaluate(scan_result)
+        assert policy_result.passed
+
+        engine.log_violations([scan_result], [policy_result])
+        assert not log_file.exists()
 
 
 class TestPerformance:

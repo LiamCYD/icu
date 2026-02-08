@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 
@@ -10,9 +11,13 @@ from icu.analyzer.models import RISK_LEVEL_ORDER, ScanResult
 from icu.analyzer.scanner import Scanner
 from icu.utils.formatting import (
     get_console,
+    print_policy_result,
     print_scan_result,
     print_scan_summary,
 )
+
+if TYPE_CHECKING:
+    from icu.policy.models import PolicyResult
 
 
 @click.command()
@@ -47,6 +52,19 @@ from icu.utils.formatting import (
     multiple=True,
     help="Glob pattern to exclude (repeatable).",
 )
+@click.option(
+    "--workers",
+    type=int,
+    default=None,
+    help="Max worker threads for directory scanning.",
+)
+@click.option(
+    "--policy",
+    "policy_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Policy YAML file to evaluate results against.",
+)
 def scan(
     target: str,
     depth: str,
@@ -54,6 +72,8 @@ def scan(
     no_db: bool,
     max_size: int | None,
     exclude: tuple[str, ...],
+    workers: int | None,
+    policy_path: str | None,
 ) -> None:
     """Scan a file or directory for threats."""
     from icu.config import load_config
@@ -75,11 +95,20 @@ def scan(
                 f"[dim]Warning: reputation DB unavailable: {exc}[/dim]"
             )
 
+    policy_engine = None
+    if policy_path is not None:
+        from icu.policy.engine import PolicyEngine
+        from icu.policy.loader import load_policy
+
+        pol = load_policy(policy_path)
+        policy_engine = PolicyEngine(pol)
+
     try:
         scanner = Scanner(
             db=db,
             max_file_size=eff_max_size,
             exclude=eff_exclude,
+            max_workers=workers,
         )
         target_path = Path(target)
 
@@ -88,12 +117,32 @@ def scan(
         else:
             results = [scanner.scan_file(target_path, depth=eff_depth)]  # type: ignore[arg-type]
 
+        # Evaluate policy for each result if policy is active
+        policy_results = None
+        if policy_engine is not None:
+            policy_results = [policy_engine.evaluate(r) for r in results]
+            policy_engine.log_violations(results, policy_results)
+
         if output_format == "json":
-            _output_json(results)
+            _output_json(results, policy_results)
         elif output_format == "sarif":
             _output_sarif(results)
         else:
-            _output_table(results, console)
+            _output_table(results, console, policy_results)
+
+        # Exit code: policy overrides risk-based exit if active
+        if policy_results is not None:
+            action_order = {"log": 0, "warn": 1, "block": 2}
+            worst_action = max(
+                (action_order.get(pr.action, 0) for pr in policy_results),
+                default=0,
+            )
+            if worst_action >= 2:
+                sys.exit(2)
+            elif worst_action >= 1:
+                sys.exit(1)
+            else:
+                sys.exit(0)
 
         # Exit code based on worst risk level
         worst = max(
@@ -110,16 +159,35 @@ def scan(
             db.close()
 
 
-def _output_table(results: list[ScanResult], console: object) -> None:
-    for result in results:
+def _output_table(
+    results: list[ScanResult],
+    console: object,
+    policy_results: list[PolicyResult] | None = None,
+) -> None:
+    for i, result in enumerate(results):
         print_scan_result(result)
+        if policy_results is not None:
+            print_policy_result(policy_results[i], file_path=result.file_path)
     if len(results) > 1:
         print_scan_summary(results)
 
 
-def _output_json(results: list[ScanResult]) -> None:
-    output = {
-        "results": [r.to_dict() for r in results],
+def _output_json(
+    results: list[ScanResult],
+    policy_results: list[PolicyResult] | None = None,
+) -> None:
+    output: dict[str, object] = {
+        "results": [
+            {
+                **r.to_dict(),
+                **(
+                    {"policy": policy_results[i].to_dict()}
+                    if policy_results is not None
+                    else {}
+                ),
+            }
+            for i, r in enumerate(results)
+        ],
         "summary": {
             "total_files": len(results),
             "clean": sum(1 for r in results if r.risk_level == "clean"),

@@ -291,6 +291,38 @@ class TestReputationExport:
         assert data["signatures"] == []
 
 
+class TestReputationStats:
+    def test_stats_help(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["reputation", "stats", "--help"])
+        assert result.exit_code == 0
+        assert "statistics" in result.output.lower()
+
+    def test_stats_shows_in_reputation_help(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["reputation", "--help"])
+        assert "stats" in result.output
+
+    def test_empty_db_json(self, runner: CliRunner, db_path: str) -> None:
+        result = runner.invoke(
+            cli,
+            ["reputation", "stats", "--format", "json", "--db-path", db_path],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["file_hashes"] == 0
+        assert data["total_scans"] == 0
+
+    def test_populated_db_json(
+        self, runner: CliRunner, populated_db: str
+    ) -> None:
+        result = runner.invoke(
+            cli,
+            ["reputation", "stats", "--format", "json", "--db-path", populated_db],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["threat_signatures"] == 2
+
+
 class TestReputationGroupHelp:
     def test_help_shows_subcommands(self, runner: CliRunner) -> None:
         result = runner.invoke(cli, ["reputation", "--help"])
@@ -300,6 +332,7 @@ class TestReputationGroupHelp:
         assert "remove" in result.output
         assert "import" in result.output
         assert "export" in result.output
+        assert "stats" in result.output
 
 
 class TestScanNoDb:

@@ -118,6 +118,52 @@ def reputation() -> None:
     """Manage threat signatures in the reputation database."""
 
 
+@reputation.command("stats")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["table", "json"]),
+    default="table",
+    help="Output format.",
+)
+@click.option("--db-path", default=None, help="Path to reputation database.")
+def stats(output_format: str, db_path: str | None) -> None:
+    """Show reputation database statistics."""
+    console = get_console()
+
+    with _get_db(db_path) as db:
+        data = db.get_stats()
+
+    if output_format == "json":
+        click.echo(json.dumps(data, indent=2))
+        return
+
+    from rich.table import Table
+
+    table = Table(show_header=False, padding=(0, 1))
+    table.add_column("Label", style="bold", width=22)
+    table.add_column("Value")
+
+    table.add_row("File hashes", str(data["file_hashes"]))
+    table.add_row("  Clean", str(data["clean"]))
+    table.add_row("  Flagged", str(data["flagged"]))
+
+    risk_breakdown = data.get("risk_breakdown", {})
+    if isinstance(risk_breakdown, dict):
+        for level, count in sorted(risk_breakdown.items()):
+            table.add_row(f"  Risk: {level}", str(count))
+
+    table.add_row("Threat signatures", str(data["threat_signatures"]))
+    threat_cats = data.get("threat_by_category", {})
+    if isinstance(threat_cats, dict):
+        for cat, count in sorted(threat_cats.items()):
+            table.add_row(f"  Category: {cat}", str(count))
+
+    table.add_row("Total scans", str(data["total_scans"]))
+
+    console.print(table)
+
+
 @reputation.command("list")
 @click.option("--category", default=None, help="Filter by category.")
 @click.option(

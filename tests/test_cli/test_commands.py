@@ -93,6 +93,72 @@ class TestScanCommand:
         assert result.exit_code == 0
         assert "Scan a file or directory" in result.output
 
+    def test_workers_option_in_help(self) -> None:
+        result = self.runner.invoke(cli, ["scan", "--help"])
+        assert "--workers" in result.output
+
+    def test_workers_option_runs(self) -> None:
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
+        result = self.runner.invoke(cli, ["scan", path, "--workers", "2"])
+        assert result.exit_code == 0
+
+    def test_policy_option_in_help(self) -> None:
+        result = self.runner.invoke(cli, ["scan", "--help"])
+        assert "--policy" in result.output
+
+    def test_clean_file_passes_policy(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / ".icu-policy.yml"
+        policy_file.write_text(
+            "defaults:\n"
+            "  action: block\n"
+            "  max_risk_level: medium\n"
+            "file_access:\n"
+            "  deny:\n"
+            "    - '~/.ssh/*'\n"
+        )
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
+        result = self.runner.invoke(
+            cli, ["scan", path, "--policy", str(policy_file)]
+        )
+        assert result.exit_code == 0
+
+    def test_malicious_file_blocked_by_policy(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / ".icu-policy.yml"
+        policy_file.write_text(
+            "defaults:\n"
+            "  action: block\n"
+            "  max_risk_level: medium\n"
+            "file_access:\n"
+            "  deny:\n"
+            "    - '~/.ssh/*'\n"
+        )
+        path = str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md")
+        result = self.runner.invoke(
+            cli, ["scan", path, "--policy", str(policy_file)]
+        )
+        assert result.exit_code in (1, 2)
+
+    def test_policy_json_output(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / ".icu-policy.yml"
+        policy_file.write_text(
+            "defaults:\n"
+            "  action: block\n"
+            "  max_risk_level: medium\n"
+            "file_access:\n"
+            "  deny:\n"
+            "    - '~/.ssh/*'\n"
+        )
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
+        result = self.runner.invoke(
+            cli,
+            ["scan", path, "--format", "json", "--policy", str(policy_file)],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        # JSON output should include policy key in results
+        assert "results" in data
+        assert "policy" in data["results"][0]
+
 
 class TestRulesCommand:
     def setup_method(self) -> None:

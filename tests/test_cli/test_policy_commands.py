@@ -246,6 +246,40 @@ class TestPolicyTest:
         assert len(parsed) > 1
 
 
+class TestPolicyTestNoDb:
+    def test_policy_test_no_db_still_works(
+        self, runner: CliRunner, fixtures_dir: Path, tmp_path: Path
+    ) -> None:
+        """policy test with DB failure still runs (warning, not crash)."""
+        from unittest.mock import patch
+
+        clean_file = fixtures_dir / "clean" / "normal_tool.py"
+        if not clean_file.exists():
+            pytest.skip("fixture not found")
+
+        policy_file = tmp_path / ".icu-policy.yml"
+        policy_file.write_text(
+            "defaults:\n"
+            "  action: block\n"
+            "  max_risk_level: medium\n"
+            "file_access:\n"
+            "  deny:\n"
+            "    - '~/.ssh/*'\n"
+        )
+        with patch(
+            "icu.reputation.database.ReputationDB",
+            side_effect=RuntimeError("db error"),
+        ):
+            result = runner.invoke(
+                cli,
+                [
+                    "policy", "test", str(clean_file),
+                    "-p", str(policy_file),
+                ],
+            )
+        assert result.exit_code == 0
+
+
 class TestPolicyGroupHelp:
     def test_policy_help(self, runner: CliRunner) -> None:
         result = runner.invoke(cli, ["policy", "--help"])

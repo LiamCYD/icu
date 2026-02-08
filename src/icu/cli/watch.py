@@ -40,6 +40,12 @@ from icu.utils.formatting import (
     help="Disable reputation database.",
 )
 @click.option(
+    "--max-size",
+    type=int,
+    default=None,
+    help="Max file size in bytes (default: 1048576 = 1 MB).",
+)
+@click.option(
     "--exclude",
     multiple=True,
     help="Glob pattern to exclude (repeatable).",
@@ -49,12 +55,14 @@ def watch(
     depth: str,
     policy_path: str | None,
     no_db: bool,
+    max_size: int | None,
     exclude: tuple[str, ...],
 ) -> None:
     """Watch a directory and scan files as they change."""
     cfg = load_config()
     eff_depth = depth if depth != "auto" else cfg.depth
     eff_no_db = no_db or cfg.no_db
+    eff_max_size = max_size if max_size is not None else cfg.max_file_size
     eff_exclude = exclude + cfg.exclude
 
     console = get_console()
@@ -69,7 +77,7 @@ def watch(
                 f"[dim]Warning: reputation DB unavailable: {exc}[/dim]"
             )
 
-    scanner = Scanner(db=db, exclude=eff_exclude)
+    scanner = Scanner(db=db, max_file_size=eff_max_size, exclude=eff_exclude)
 
     policy_engine = None
     if policy_path is not None:
@@ -89,6 +97,7 @@ def watch(
         if policy_engine is not None:
             pr = policy_engine.evaluate(result)
             print_policy_result(pr, file_path=result.file_path)
+            policy_engine.log_violations([result], [pr])
 
     stop_event = threading.Event()
 

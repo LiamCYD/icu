@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from icu.reputation.database import ReputationDB, seed_default_signatures
-from icu.reputation.models import ThreatSignature
+from icu.reputation.models import Signature, ThreatSignature
 
 
 class TestThreatSignatureCRUD:
@@ -114,6 +114,44 @@ class TestSeedSignatures:
     def test_returns_count(self, tmp_db: ReputationDB) -> None:
         count = seed_default_signatures(tmp_db)
         assert count == tmp_db.count_threat_signatures()
+
+
+class TestGetStats:
+    def test_get_stats_empty(self, tmp_db: ReputationDB) -> None:
+        stats = tmp_db.get_stats()
+        assert stats["file_hashes"] == 0
+        assert stats["clean"] == 0
+        assert stats["flagged"] == 0
+        assert stats["threat_signatures"] == 0
+        assert stats["total_scans"] == 0
+        assert stats["risk_breakdown"] == {}
+        assert stats["threat_by_category"] == {}
+
+    def test_get_stats_with_data(self, tmp_db: ReputationDB) -> None:
+        # Add file signatures
+        tmp_db.record_signature(
+            Signature(sha256="a" * 64, risk_level="clean", flagged=False)
+        )
+        tmp_db.record_signature(
+            Signature(sha256="b" * 64, risk_level="high", flagged=True)
+        )
+        # Add threat signature
+        tmp_db.add_threat_signature(
+            ThreatSignature(
+                name="test", category="test_cat", pattern="x", severity="info"
+            )
+        )
+        # Add scan log
+        tmp_db.log_scan("a" * 64, "fast", "clean", duration_ms=1.0)
+
+        stats = tmp_db.get_stats()
+        assert stats["file_hashes"] == 2
+        assert stats["clean"] == 1
+        assert stats["flagged"] == 1
+        assert stats["risk_breakdown"] == {"clean": 1, "high": 1}
+        assert stats["threat_signatures"] == 1
+        assert stats["threat_by_category"] == {"test_cat": 1}
+        assert stats["total_scans"] == 1
 
 
 class TestGetScanHistory:

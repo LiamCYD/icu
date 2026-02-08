@@ -24,6 +24,10 @@ class TestWatchCLI:
         result = self.runner.invoke(cli, ["watch", "--help"])
         assert "--exclude" in result.output
 
+    def test_has_max_size_option(self) -> None:
+        result = self.runner.invoke(cli, ["watch", "--help"])
+        assert "--max-size" in result.output
+
     def test_has_depth_option(self) -> None:
         result = self.runner.invoke(cli, ["watch", "--help"])
         assert "--depth" in result.output
@@ -85,6 +89,34 @@ class TestWatchCLI:
         assert len(scanner_instances) == 1
         exclude = scanner_instances[0].get("exclude", ())
         assert "*.log" in exclude
+
+    @patch("icu.cli.watch.watch_directory")
+    def test_max_size_passed_to_scanner(
+        self,
+        mock_watch: object,
+        tmp_path: Path,
+    ) -> None:
+        """--max-size option is forwarded to Scanner."""
+        from unittest.mock import MagicMock
+
+        mock_wd = MagicMock(side_effect=KeyboardInterrupt)
+        scanner_instances: list[object] = []
+
+        class CapturingScanner:
+            def __init__(self, **kwargs: object) -> None:
+                scanner_instances.append(kwargs)
+
+        with (
+            patch("icu.cli.watch.watch_directory", mock_wd),
+            patch("icu.cli.watch.Scanner", CapturingScanner),
+        ):
+            self.runner.invoke(
+                cli,
+                ["watch", str(tmp_path), "--max-size", "500000"],
+            )
+
+        assert len(scanner_instances) == 1
+        assert scanner_instances[0].get("max_file_size") == 500000
 
     @patch("icu.cli.watch.watch_directory")
     def test_db_warning_on_failure(

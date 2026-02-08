@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from icu.mcp.server import (
     check_content,
+    check_policy,
     list_rules,
     lookup_hash,
     scan_directory,
@@ -156,6 +157,64 @@ class TestLookupHash:
             raw = lookup_hash("c" * 64)
         result = json.loads(raw)
         assert "error" in result
+
+
+_POLICY_YAML = """\
+defaults:
+  action: block
+  max_risk_level: medium
+file_access:
+  deny:
+    - "~/.ssh/*"
+"""
+
+
+class TestCheckPolicy:
+    def test_clean_passes(self, clean_fixtures: Path) -> None:
+        raw = check_policy(
+            str(clean_fixtures / "normal_tool.py"), _POLICY_YAML
+        )
+        result = json.loads(raw)
+        assert "scan" in result
+        assert "policy" in result
+        assert result["policy"]["passed"] is True
+
+    def test_malicious_blocked(self, malicious_fixtures: Path) -> None:
+        raw = check_policy(
+            str(malicious_fixtures / "prompt_injection_skill.md"),
+            _POLICY_YAML,
+        )
+        result = json.loads(raw)
+        assert result["policy"]["passed"] is False
+        assert result["policy"]["action"] == "block"
+
+    def test_invalid_policy_error(self, clean_fixtures: Path) -> None:
+        raw = check_policy(
+            str(clean_fixtures / "normal_tool.py"),
+            "[invalid yaml {{",
+        )
+        result = json.loads(raw)
+        assert "error" in result
+
+    def test_with_tool_name(self, clean_fixtures: Path) -> None:
+        policy_yaml = """\
+defaults:
+  action: block
+  max_risk_level: low
+file_access:
+  deny:
+    - "~/.ssh/*"
+tool_overrides:
+  - name: cursor
+    max_risk_level: critical
+"""
+        raw = check_policy(
+            str(clean_fixtures / "normal_tool.py"),
+            policy_yaml,
+            tool_name="cursor",
+        )
+        result = json.loads(raw)
+        assert result["policy"]["passed"] is True
 
 
 class TestListRules:

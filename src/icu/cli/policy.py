@@ -159,8 +159,10 @@ def test(
     if not no_db:
         try:
             db = ReputationDB()
-        except Exception:
-            pass
+        except Exception as exc:
+            console.print(
+                f"[dim]Warning: reputation DB unavailable: {exc}[/dim]"
+            )
 
     try:
         engine = PolicyEngine(pol)
