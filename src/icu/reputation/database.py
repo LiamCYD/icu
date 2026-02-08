@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from icu.reputation.models import Signature
+from icu.reputation.models import Signature, ThreatSignature
 from icu.utils.logging import get_logger
 
 _log = get_logger("reputation.db")
@@ -170,6 +170,125 @@ class ReputationDB:
         return sig is not None and (
             sig.risk_level in ("high", "critical") or sig.flagged
         )
+
+    # ── Threat Signatures CRUD ────────────────────────────────
+
+    def add_threat_signature(self, sig: ThreatSignature) -> int:
+        cursor = self._conn.execute(
+            """
+            INSERT INTO threat_signatures
+                (name, category, pattern, severity, description, source)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                sig.name,
+                sig.category,
+                sig.pattern,
+                sig.severity,
+                sig.description,
+                sig.source,
+            ),
+        )
+        self._conn.commit()
+        return cursor.lastrowid  # type: ignore[return-value]
+
+    def get_threat_signatures(
+        self, category: str | None = None
+    ) -> list[ThreatSignature]:
+        if category is not None:
+            rows = self._conn.execute(
+                "SELECT * FROM threat_signatures WHERE category = ?",
+                (category,),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT * FROM threat_signatures"
+            ).fetchall()
+        return [
+            ThreatSignature(
+                id=row["id"],
+                name=row["name"],
+                category=row["category"],
+                pattern=row["pattern"],
+                severity=row["severity"] or "warning",
+                description=row["description"] or "",
+                added_date=_parse_datetime(row["added_date"]),
+                source=row["source"] or "local",
+            )
+            for row in rows
+        ]
+
+    def remove_threat_signature(self, sig_id: int) -> bool:
+        cursor = self._conn.execute(
+            "DELETE FROM threat_signatures WHERE id = ?", (sig_id,)
+        )
+        self._conn.commit()
+        return cursor.rowcount > 0
+
+    def count_threat_signatures(self) -> int:
+        row = self._conn.execute(
+            "SELECT COUNT(*) AS cnt FROM threat_signatures"
+        ).fetchone()
+        return int(row["cnt"])
+
+    def get_scan_history(
+        self, sha256: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
+        rows = self._conn.execute(
+            """
+            SELECT id, sha256, scan_type, result, findings_json,
+                   duration_ms, timestamp
+            FROM scan_log
+            WHERE sha256 = ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+            """,
+            (sha256, limit),
+        ).fetchall()
+        return [
+            {
+                "id": row["id"],
+                "sha256": row["sha256"],
+                "scan_type": row["scan_type"],
+                "result": row["result"],
+                "findings_json": row["findings_json"],
+                "duration_ms": row["duration_ms"],
+                "timestamp": row["timestamp"],
+            }
+            for row in rows
+        ]
+
+
+def seed_default_signatures(db: ReputationDB) -> int:
+    """Load seed threat signatures from YAML if DB has none."""
+    if db.count_threat_signatures() > 0:
+        return 0
+
+    import yaml
+
+    seed_path = Path(__file__).parent / "seed_signatures.yml"
+    if not seed_path.exists():
+        _log.warning("Seed signatures file not found: %s", seed_path)
+        return 0
+
+    data = yaml.safe_load(seed_path.read_text(encoding="utf-8"))
+    if not data or "signatures" not in data:
+        return 0
+
+    count = 0
+    for entry in data["signatures"]:
+        sig = ThreatSignature(
+            name=entry["name"],
+            category=entry["category"],
+            pattern=entry["pattern"],
+            severity=entry.get("severity", "warning"),
+            description=entry.get("description", ""),
+            source=entry.get("source", "seed"),
+        )
+        db.add_threat_signature(sig)
+        count += 1
+
+    return count
 
 
 def _parse_datetime(val: str | None) -> datetime | None:

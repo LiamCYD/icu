@@ -8,6 +8,7 @@ from icu.analyzer.deobfuscator import scan_deobfuscation
 from icu.analyzer.entropy import scan_entropy
 from icu.analyzer.heuristics import HeuristicScanner
 from icu.analyzer.models import Finding, ScanResult, aggregate_risk_level
+from icu.analyzer.patterns import DETECTION_RULES, CompiledRuleSet
 from icu.reputation.database import ReputationDB
 from icu.reputation.hasher import hash_file
 from icu.utils.cache import HashCache
@@ -35,7 +36,26 @@ class Scanner:
     ) -> None:
         self._db = db
         self._cache = cache or HashCache()
-        self._heuristic = HeuristicScanner()
+
+        if db is not None:
+            try:
+                from icu.reputation.converter import threat_sigs_to_rules
+
+                dynamic = threat_sigs_to_rules(db.get_threat_signatures())
+                if dynamic:
+                    combined = DETECTION_RULES + dynamic
+                    self._heuristic = HeuristicScanner(
+                        rules=CompiledRuleSet(combined)
+                    )
+                else:
+                    self._heuristic = HeuristicScanner()
+            except Exception as exc:
+                _log.warning(
+                    "Failed to load dynamic threat signatures: %s", exc
+                )
+                self._heuristic = HeuristicScanner()
+        else:
+            self._heuristic = HeuristicScanner()
 
     def scan_file(
         self,

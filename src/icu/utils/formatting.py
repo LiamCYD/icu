@@ -11,6 +11,7 @@ from rich.text import Text
 if TYPE_CHECKING:
     from icu.analyzer.models import Finding, ScanResult
     from icu.policy.models import PolicyResult
+    from icu.reputation.models import Signature, ThreatSignature
 
 SEVERITY_COLORS: dict[str, str] = {
     "info": "cyan",
@@ -136,3 +137,58 @@ def print_policy_result(
     result: PolicyResult, file_path: str = ""
 ) -> None:
     _console.print(format_policy_result(result, file_path))
+
+
+def format_signature(sig: Signature) -> Panel:
+    """Format a package/file Signature as a Rich Panel."""
+    risk_color = RISK_COLORS.get(sig.risk_level, "white")
+
+    table = Table(show_header=False, expand=True, padding=(0, 1))
+    table.add_column("Field", style="bold", width=16)
+    table.add_column("Value")
+
+    table.add_row("SHA256", sig.sha256)
+    table.add_row("Name", sig.name or "(unknown)")
+    table.add_row("Risk Level", Text(sig.risk_level.upper(), style=risk_color))
+    table.add_row("Scan Count", str(sig.scan_count))
+    table.add_row(
+        "First Seen",
+        sig.first_seen.isoformat() if sig.first_seen else "(never)",
+    )
+    table.add_row(
+        "Last Seen",
+        sig.last_seen.isoformat() if sig.last_seen else "(never)",
+    )
+    table.add_row("Flagged", "Yes" if sig.flagged else "No")
+    if sig.notes:
+        table.add_row("Notes", sig.notes)
+
+    title = Text()
+    title.append("Signature: ", style="bold")
+    title.append(sig.sha256[:16] + "...", style="bold white")
+
+    return Panel(table, title=title, border_style=risk_color)
+
+
+def format_threat_signature_table(sigs: list[ThreatSignature]) -> Table:
+    """Format a list of ThreatSignatures as a Rich Table."""
+    table = Table(show_header=True, expand=True, padding=(0, 1))
+    table.add_column("ID", style="bold", width=6)
+    table.add_column("Name", width=30)
+    table.add_column("Category", width=20)
+    table.add_column("Severity", width=10)
+    table.add_column("Source", width=10)
+    table.add_column("Pattern", overflow="fold")
+
+    for sig in sigs:
+        sev_color = SEVERITY_COLORS.get(sig.severity, "white")
+        table.add_row(
+            str(sig.id) if sig.id is not None else "-",
+            sig.name,
+            sig.category,
+            Text(sig.severity.upper(), style=sev_color),
+            sig.source,
+            sig.pattern,
+        )
+
+    return table

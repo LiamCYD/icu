@@ -23,3 +23,8 @@ cli.add_command(scan)
 from icu.cli.policy import policy  # noqa: E402
 
 cli.add_command(policy)
+
+from icu.cli.reputation import lookup, reputation  # noqa: E402
+
+cli.add_command(lookup)
+cli.add_command(reputation)

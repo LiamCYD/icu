@@ -117,13 +117,22 @@ def check(policy_path: str | None) -> None:
     default="table",
     help="Output format.",
 )
+@click.option(
+    "--no-db",
+    is_flag=True,
+    default=False,
+    help="Disable reputation database.",
+)
 def test(
     target: str,
     policy_path: str | None,
     tool_name: str | None,
     output_format: str,
+    no_db: bool,
 ) -> None:
     """Scan a target and evaluate against policy."""
+    from icu.reputation.database import ReputationDB
+
     console = get_console()
 
     # Load policy
@@ -146,47 +155,58 @@ def test(
 
             pol = default_policy()
 
-    engine = PolicyEngine(pol)
-    scanner = Scanner()
-    target_path = Path(target)
+    db = None
+    if not no_db:
+        try:
+            db = ReputationDB()
+        except Exception:
+            pass
 
-    if target_path.is_dir():
-        results = scanner.scan_directory(target_path)
-    else:
-        results = [scanner.scan_file(target_path)]
+    try:
+        engine = PolicyEngine(pol)
+        scanner = Scanner(db=db)
+        target_path = Path(target)
 
-    # Evaluate each result
-    worst_action = "log"
-    all_output: list[dict[str, object]] = []
-
-    for scan_result in results:
-        policy_result = engine.evaluate(scan_result, tool_name)
-
-        if output_format == "table":
-            print_scan_result(scan_result)
-            print_policy_result(policy_result, scan_result.file_path)
+        if target_path.is_dir():
+            results = scanner.scan_directory(target_path)
         else:
-            all_output.append(
-                {
-                    "scan": scan_result.to_dict(),
-                    "policy": policy_result.to_dict(),
-                }
-            )
+            results = [scanner.scan_file(target_path)]
 
-        # Track worst action
-        action_order = {"log": 0, "warn": 1, "block": 2}
-        if action_order.get(policy_result.action, 0) > action_order.get(
-            worst_action, 0
-        ):
-            worst_action = policy_result.action
+        # Evaluate each result
+        worst_action = "log"
+        all_output: list[dict[str, object]] = []
 
-    if output_format == "json":
-        click.echo(json.dumps(all_output, indent=2))
+        for scan_result in results:
+            policy_result = engine.evaluate(scan_result, tool_name)
 
-    # Exit code: 0=pass, 1=warn, 2=block
-    if worst_action == "block":
-        sys.exit(2)
-    elif worst_action == "warn":
-        sys.exit(1)
-    else:
-        sys.exit(0)
+            if output_format == "table":
+                print_scan_result(scan_result)
+                print_policy_result(policy_result, scan_result.file_path)
+            else:
+                all_output.append(
+                    {
+                        "scan": scan_result.to_dict(),
+                        "policy": policy_result.to_dict(),
+                    }
+                )
+
+            # Track worst action
+            action_order = {"log": 0, "warn": 1, "block": 2}
+            if action_order.get(policy_result.action, 0) > action_order.get(
+                worst_action, 0
+            ):
+                worst_action = policy_result.action
+
+        if output_format == "json":
+            click.echo(json.dumps(all_output, indent=2))
+
+        # Exit code: 0=pass, 1=warn, 2=block
+        if worst_action == "block":
+            sys.exit(2)
+        elif worst_action == "warn":
+            sys.exit(1)
+        else:
+            sys.exit(0)
+    finally:
+        if db is not None:
+            db.close()

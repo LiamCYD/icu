@@ -26,32 +26,53 @@ from icu.utils.formatting import get_console, print_scan_result
     default="table",
     help="Output format.",
 )
-def scan(target: str, depth: str, output_format: str) -> None:
+@click.option(
+    "--no-db",
+    is_flag=True,
+    default=False,
+    help="Disable reputation database.",
+)
+def scan(target: str, depth: str, output_format: str, no_db: bool) -> None:
     """Scan a file or directory for threats."""
-    scanner = Scanner()
-    target_path = Path(target)
-    console = get_console()
+    from icu.reputation.database import ReputationDB
 
-    if target_path.is_dir():
-        results = scanner.scan_directory(target_path, depth=depth)  # type: ignore[arg-type]
-    else:
-        results = [scanner.scan_file(target_path, depth=depth)]  # type: ignore[arg-type]
+    db = None
+    if not no_db:
+        try:
+            db = ReputationDB()
+        except Exception:
+            pass
 
-    if output_format == "json":
-        _output_json(results)
-    elif output_format == "sarif":
-        _output_sarif(results)
-    else:
-        _output_table(results, console)
+    try:
+        scanner = Scanner(db=db)
+        target_path = Path(target)
+        console = get_console()
 
-    # Exit code based on worst risk level
-    worst = max((RISK_LEVEL_ORDER[r.risk_level] for r in results), default=0)
-    if worst >= RISK_LEVEL_ORDER["high"]:
-        sys.exit(2)
-    elif worst >= RISK_LEVEL_ORDER["medium"]:
-        sys.exit(1)
-    else:
-        sys.exit(0)
+        if target_path.is_dir():
+            results = scanner.scan_directory(target_path, depth=depth)  # type: ignore[arg-type]
+        else:
+            results = [scanner.scan_file(target_path, depth=depth)]  # type: ignore[arg-type]
+
+        if output_format == "json":
+            _output_json(results)
+        elif output_format == "sarif":
+            _output_sarif(results)
+        else:
+            _output_table(results, console)
+
+        # Exit code based on worst risk level
+        worst = max(
+            (RISK_LEVEL_ORDER[r.risk_level] for r in results), default=0
+        )
+        if worst >= RISK_LEVEL_ORDER["high"]:
+            sys.exit(2)
+        elif worst >= RISK_LEVEL_ORDER["medium"]:
+            sys.exit(1)
+        else:
+            sys.exit(0)
+    finally:
+        if db is not None:
+            db.close()
 
 
 def _output_table(results: list[ScanResult], console: object) -> None:

@@ -18,7 +18,7 @@ Severity = Literal["info", "warning", "danger", "critical"]
 @dataclass(frozen=True, slots=True)
 class DetectionRule:
     rule_id: str
-    category: Category
+    category: str
     severity: Severity
     pattern: str
     description: str

@@ -1,0 +1,73 @@
+# ICU seed threat signatures — AI-specific attacks that complement hardcoded rules.
+# Loaded on first DB creation only.
+
+signatures:
+  - name: MCP tool schema injection
+    category: prompt_injection
+    pattern: "tool_call|function_call.*\\{.*\\\"name\\\"\\s*:"
+    severity: danger
+    description: "[dynamic] MCP/function-call schema injection attempting to invoke tools"
+    source: seed
+
+  - name: HTML comment hidden instructions
+    category: prompt_injection
+    pattern: "<!--\\s*(?:SYSTEM|INSTRUCTION|PROMPT|IGNORE).*?-->"
+    severity: danger
+    description: "[dynamic] Hidden instructions embedded in HTML comments"
+    source: seed
+
+  - name: Markdown image exfiltration
+    category: data_exfiltration
+    pattern: "!\\[.*\\]\\(https?://.*\\?.*(?:data|token|key|secret|password).*\\)"
+    severity: critical
+    description: "[dynamic] Markdown image tag used to exfiltrate data via URL params"
+    source: seed
+
+  - name: Data URL payload
+    category: obfuscation
+    pattern: "data:(?:text|application)/[^;]+;base64,[A-Za-z0-9+/]{100,}"
+    severity: danger
+    description: "[dynamic] Large base64 data URL payload (potential hidden content)"
+    source: seed
+
+  - name: Invisible Unicode tag characters
+    category: obfuscation
+    pattern: "[\\U000E0001-\\U000E007F]"
+    severity: critical
+    description: "[dynamic] Invisible Unicode tag characters (U+E0001-E007F) used for steganography"
+    source: seed
+
+  - name: Webhook exfiltration endpoint
+    category: data_exfiltration
+    pattern: "(?:pipedream\\.net|requestbin\\.com|hookbin\\.com|webhook\\.site|burpcollaborator\\.net)"
+    severity: critical
+    description: "[dynamic] URL pointing to known webhook/exfiltration service"
+    source: seed
+
+  - name: Llama instruction injection
+    category: prompt_injection
+    pattern: "\\[INST\\]|\\[/INST\\]|<<SYS>>|<</SYS>>"
+    severity: danger
+    description: "[dynamic] Llama/ChatML instruction format markers used for injection"
+    source: seed
+
+  - name: ChatML format injection
+    category: prompt_injection
+    pattern: "<\\|im_start\\|>|<\\|im_end\\|>|<\\|endoftext\\|>"
+    severity: danger
+    description: "[dynamic] ChatML special tokens used for prompt injection"
+    source: seed
+
+  - name: Prompt extraction function
+    category: data_exfiltration
+    pattern: "(?:get_system_prompt|extract_instructions|dump_prompt|reveal_system|show_prompt)"
+    severity: danger
+    description: "[dynamic] Function name suggesting prompt/instruction extraction"
+    source: seed
+
+  - name: Indirect prompt injection via tool output
+    category: prompt_injection
+    pattern: "(?:BEGIN\\s+HIDDEN|START\\s+INJECTION|OVERRIDE\\s+INSTRUCTIONS)\\b"
+    severity: critical
+    description: "[dynamic] Indirect prompt injection markers in tool output"
+    source: seed
