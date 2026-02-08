@@ -8,6 +8,9 @@ from pathlib import Path
 import click
 
 from icu.analyzer.scanner import Scanner
+from icu.config import load_config
+from icu.reputation.database import ReputationDB
+from icu.runtime.watcher import watch_directory
 from icu.utils.formatting import (
     get_console,
     print_policy_result,
@@ -36,22 +39,37 @@ from icu.utils.formatting import (
     default=False,
     help="Disable reputation database.",
 )
-def watch(target: str, depth: str, policy_path: str | None, no_db: bool) -> None:
+@click.option(
+    "--exclude",
+    multiple=True,
+    help="Glob pattern to exclude (repeatable).",
+)
+def watch(
+    target: str,
+    depth: str,
+    policy_path: str | None,
+    no_db: bool,
+    exclude: tuple[str, ...],
+) -> None:
     """Watch a directory and scan files as they change."""
-    from icu.reputation.database import ReputationDB
-    from icu.runtime.watcher import watch_directory
+    cfg = load_config()
+    eff_depth = depth if depth != "auto" else cfg.depth
+    eff_no_db = no_db or cfg.no_db
+    eff_exclude = exclude + cfg.exclude
 
     console = get_console()
     target_dir = Path(target)
 
     db = None
-    if not no_db:
+    if not eff_no_db:
         try:
             db = ReputationDB()
-        except Exception:
-            pass
+        except Exception as exc:
+            console.print(
+                f"[dim]Warning: reputation DB unavailable: {exc}[/dim]"
+            )
 
-    scanner = Scanner(db=db)
+    scanner = Scanner(db=db, exclude=eff_exclude)
 
     policy_engine = None
     if policy_path is not None:
@@ -76,14 +94,14 @@ def watch(target: str, depth: str, policy_path: str | None, no_db: bool) -> None
 
     console.print(
         f"[bold]Watching[/bold] {target_dir.resolve()} "
-        f"[dim](depth={depth}, Ctrl+C to stop)[/dim]",
+        f"[dim](depth={eff_depth}, Ctrl+C to stop)[/dim]",
     )
 
     try:
         watch_directory(
             path=target_dir,
             scanner=scanner,
-            depth=depth,  # type: ignore[arg-type]
+            depth=eff_depth,  # type: ignore[arg-type]
             on_result=on_result,
             stop_event=stop_event,
         )

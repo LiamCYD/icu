@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Literal
 
@@ -39,10 +40,12 @@ class Scanner:
         cache: HashCache | None = None,
         max_file_size: int = _DEFAULT_MAX_FILE_SIZE,
         max_workers: int | None = None,
+        exclude: tuple[str, ...] = (),
     ) -> None:
         self._db = db
         self._cache = cache or HashCache()
         self._max_file_size = max_file_size
+        self._exclude = exclude
         self._max_workers = max_workers or min(
             4, os.cpu_count() or 1
         )
@@ -101,6 +104,14 @@ class Scanner:
                 )
         except OSError:
             pass
+
+        if _matches_exclude(path, self._exclude):
+            return ScanResult(
+                file_path=str(path),
+                risk_level="clean",
+                findings=(),
+                scan_time_ms=_elapsed_ms(start),
+            )
 
         # Stage 1: Hash check
         file_hash = hash_file(path)
@@ -225,7 +236,9 @@ class Scanner:
 
         files = sorted(
             c for c in path.rglob("*")
-            if c.is_file() and not _should_skip_path(c)
+            if c.is_file()
+            and not _should_skip_path(c)
+            and not _matches_exclude(c, self._exclude)
         )
 
         results: list[ScanResult] = []
@@ -251,3 +264,12 @@ def _should_skip_path(path: Path) -> bool:
     parts = path.parts
     skip_dirs = {"__pycache__", ".git", "node_modules", ".venv", ".tox"}
     return any(part in skip_dirs for part in parts)
+
+
+def _matches_exclude(path: Path, patterns: tuple[str, ...]) -> bool:
+    path_str = str(path)
+    name = path.name
+    return any(
+        fnmatch(name, p) or fnmatch(path_str, p)
+        for p in patterns
+    )
