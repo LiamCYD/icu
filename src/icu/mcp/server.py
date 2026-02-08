@@ -167,6 +167,44 @@ def lookup_hash(sha256: str) -> str:
         return json.dumps({"error": str(exc)})
 
 
+@mcp.tool()
+def list_rules(
+    category: str | None = None,
+    severity: str | None = None,
+) -> str:
+    """List available detection rules with optional filtering.
+
+    Args:
+        category: Filter by category (e.g. "prompt_injection").
+        severity: Filter by severity (e.g. "critical").
+    """
+    from icu.analyzer.patterns import DETECTION_RULES
+
+    filtered = list(DETECTION_RULES)
+    if category is not None:
+        filtered = [r for r in filtered if r.category == category]
+    if severity is not None:
+        filtered = [r for r in filtered if r.severity == severity]
+
+    return json.dumps(
+        {
+            "total": len(DETECTION_RULES),
+            "showing": len(filtered),
+            "rules": [
+                {
+                    "rule_id": r.rule_id,
+                    "category": r.category,
+                    "severity": r.severity,
+                    "description": r.description,
+                    "pattern": r.pattern,
+                }
+                for r in filtered
+            ],
+        },
+        indent=2,
+    )
+
+
 def main() -> None:
     """Entry point for ``icu-mcp`` console script."""
     mcp.run()
