@@ -1,0 +1,39 @@
+# ICU Policy Configuration
+version: "1.0"
+
+defaults:
+  action: block
+  allow_network: false
+  allow_shell: false
+  max_risk_level: medium
+  deep_scan: true
+
+file_access:
+  deny:
+    - "~/.ssh/*"
+    - "~/.aws/*"
+    - "~/.gnupg/*"
+    - "~/.config/gcloud/*"
+    - "**/.env"
+    - "**/.env.*"
+    - "**/credentials.json"
+    - "**/secrets.yml"
+    - "**/secrets.yaml"
+  allow: []
+
+network:
+  allow: []
+  deny:
+    - "*.onion"
+    - "*.i2p"
+
+alerts:
+  console: true
+  # log_file: /var/log/icu/alerts.log
+
+# tool_overrides:
+#   - name: cursor
+#     allow_network: true
+#     max_risk_level: low
+#   - name: copilot
+#     action: warn

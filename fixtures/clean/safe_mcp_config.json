@@ -1,0 +1,37 @@
+{
+  "name": "code-formatter",
+  "version": "1.0.0",
+  "description": "A code formatting tool that supports multiple languages",
+  "tools": [
+    {
+      "name": "format_python",
+      "description": "Format Python code using black-style formatting",
+      "parameters": {
+        "code": {
+          "type": "string",
+          "description": "The Python code to format"
+        },
+        "line_length": {
+          "type": "integer",
+          "description": "Maximum line length (default: 88)",
+          "default": 88
+        }
+      }
+    },
+    {
+      "name": "format_json",
+      "description": "Pretty-print JSON with configurable indentation",
+      "parameters": {
+        "json_string": {
+          "type": "string",
+          "description": "The JSON string to format"
+        },
+        "indent": {
+          "type": "integer",
+          "description": "Number of spaces for indentation (default: 2)",
+          "default": 2
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+This is a normal looking document about code formatting best practices.
+
+Always use consistent indentation and follow your language's style guide.
+
+Here is some text with hidden zero-width characters: ​‌​‌​​​‌​‌​​‌‌​‌​​​​​‌​​​​‌‌​‌‌​​​​​‌​​‌‌​‌​‌​​​‌
+
+The above line contains zero-width characters that encode hidden instructions.
+
+More hidden content: ﻿​‌‌​​​‌‌​‌​​‌﻿​‌‌
+
+Remember to always write clean, readable code!
