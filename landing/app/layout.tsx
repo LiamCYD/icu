@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,9 +10,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "I See You — AI supply chain firewall",
+  title: "ICU — AI Supply Chain Threat Intelligence",
   description:
-    "AI supply chain firewall — scan files for prompt injection, data exfiltration, and obfuscated payloads.",
+    "Real-time scanning of AI marketplaces for malicious packages. Prompt injection, data exfiltration, and obfuscation detection.",
+  openGraph: {
+    title: "ICU — AI Supply Chain Threat Intelligence",
+    description:
+      "Real-time scanning of AI marketplaces for malicious packages.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -20,7 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} page-bg min-h-screen`}>
+        <Header />
+        <main className="pt-14">{children}</main>
+        <Footer />
+      </body>
     </html>
   );
 }

@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Marketplace {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  url         String
+  description String?
+  logoUrl     String?
+  lastScraped DateTime?
+  createdAt   DateTime  @default(now())
+  packages    Package[]
+
+  @@map("marketplaces")
+}
+
+model Author {
+  id              String    @id @default(cuid())
+  name            String
+  marketplaceSlug String?
+  profileUrl      String?
+  firstSeen       DateTime  @default(now())
+  lastSeen        DateTime  @default(now())
+  packages        Package[]
+
+  @@unique([name, marketplaceSlug])
+  @@map("authors")
+}
+
+model Package {
+  id            String      @id @default(cuid())
+  name          String
+  version       String      @default("unknown")
+  description   String?
+  sourceUrl     String?
+  riskLevel     String      @default("clean")
+  sha256        String?
+  isActive      Boolean     @default(true)
+  firstSeen     DateTime    @default(now())
+  lastScanned   DateTime?
+  metadata      Json?
+  marketplaceId String
+  marketplace   Marketplace @relation(fields: [marketplaceId], references: [id])
+  authorId      String?
+  author        Author?     @relation(fields: [authorId], references: [id])
+  scans         Scan[]
+
+  @@unique([name, version, marketplaceId])
+  @@index([riskLevel])
+  @@map("packages")
+}
+
+model Scan {
+  id           String    @id @default(cuid())
+  packageId    String
+  package      Package   @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  scanDate     DateTime  @default(now())
+  scanDuration Float     @default(0)
+  filesScanned Int       @default(0)
+  riskLevel    String    @default("clean")
+  scanDepth    String    @default("auto")
+  icuVersion   String    @default("0.1.0")
+  rawOutput    Json?
+  findings     Finding[]
+
+  @@index([packageId])
+  @@index([scanDate])
+  @@map("scans")
+}
+
+model Finding {
+  id          String @id @default(cuid())
+  scanId      String
+  scan        Scan   @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  ruleId      String
+  category    String
+  severity    String
+  description String
+  filePath    String
+  lineNumber  Int
+  matchedText String
+  context     String @default("")
+
+  @@index([scanId])
+  @@index([ruleId])
+  @@index([severity])
+  @@map("findings")
+}
+
+model ScanStats {
+  id                 String   @id @default("singleton")
+  totalPackages      Int      @default(0)
+  totalScans         Int      @default(0)
+  totalFindings      Int      @default(0)
+  totalClean         Int      @default(0)
+  totalLow           Int      @default(0)
+  totalMedium        Int      @default(0)
+  totalHigh          Int      @default(0)
+  totalCritical      Int      @default(0)
+  promptInjection    Int      @default(0)
+  dataExfiltration   Int      @default(0)
+  obfuscation        Int      @default(0)
+  suspiciousCommands Int      @default(0)
+  networkSuspicious  Int      @default(0)
+  topRules           Json?
+  dailyTrend         Json?
+  lastUpdated        DateTime @default(now())
+
+  @@map("scan_stats")
+}
