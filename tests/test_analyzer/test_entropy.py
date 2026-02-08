@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import math
 
-from icu.analyzer.entropy import calculate_entropy, extract_string_literals, scan_entropy
+from icu.analyzer.entropy import (
+    calculate_entropy,
+    extract_string_literals,
+    scan_entropy,
+)
 
 
 class TestCalculateEntropy:

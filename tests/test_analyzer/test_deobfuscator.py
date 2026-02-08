@@ -76,7 +76,8 @@ class TestDetectUnicodeEscapes:
 
 class TestDetectZeroWidth:
     def test_zero_width_chars(self) -> None:
-        content = "normal text \u200b\u200c\u200b\u200c\u200b\u200b\u200b\u200c more text"
+        zw = "\u200b\u200c\u200b\u200c\u200b\u200b\u200b\u200c"
+        content = f"normal text {zw} more text"
         results = detect_zero_width(content)
         assert len(results) >= 1
         assert results[0].encoding == "zero_width"

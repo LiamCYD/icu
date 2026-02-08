@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import pytest
-
 from icu.reputation.database import ReputationDB, seed_default_signatures
-from icu.reputation.models import Signature, ThreatSignature
+from icu.reputation.models import ThreatSignature
 
 
 class TestThreatSignatureCRUD:

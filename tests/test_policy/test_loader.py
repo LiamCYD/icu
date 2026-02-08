@@ -13,7 +13,6 @@ from icu.policy.loader import (
 )
 from icu.policy.models import Policy
 
-
 _VALID_YAML = """\
 version: "1.0"
 defaults:

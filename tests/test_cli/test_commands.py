@@ -17,13 +17,13 @@ class TestScanCommand:
         self.runner = CliRunner()
 
     def test_scan_clean_file_exit_0(self) -> None:
-        result = self.runner.invoke(cli, ["scan", str(_FIXTURES_DIR / "clean" / "normal_tool.py")])
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
+        result = self.runner.invoke(cli, ["scan", path])
         assert result.exit_code == 0
 
     def test_scan_malicious_file_exit_nonzero(self) -> None:
-        result = self.runner.invoke(
-            cli, ["scan", str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md")]
-        )
+        path = str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md")
+        result = self.runner.invoke(cli, ["scan", path])
         assert result.exit_code in (1, 2)
 
     def test_scan_directory(self) -> None:
@@ -31,9 +31,9 @@ class TestScanCommand:
         assert result.exit_code == 0
 
     def test_scan_json_format(self) -> None:
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
         result = self.runner.invoke(
-            cli,
-            ["scan", str(_FIXTURES_DIR / "clean" / "normal_tool.py"), "--format", "json"],
+            cli, ["scan", path, "--format", "json"],
         )
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -42,17 +42,17 @@ class TestScanCommand:
         assert data["summary"]["total_files"] == 1
 
     def test_scan_json_malicious(self) -> None:
+        path = str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md")
         result = self.runner.invoke(
-            cli,
-            ["scan", str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md"), "--format", "json"],
+            cli, ["scan", path, "--format", "json"],
         )
         data = json.loads(result.output)
         assert data["summary"]["critical"] >= 1
 
     def test_scan_sarif_format(self) -> None:
+        path = str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md")
         result = self.runner.invoke(
-            cli,
-            ["scan", str(_FIXTURES_DIR / "malicious" / "prompt_injection_skill.md"), "--format", "sarif"],
+            cli, ["scan", path, "--format", "sarif"],
         )
         data = json.loads(result.output)
         assert data["version"] == "2.1.0"
@@ -60,16 +60,16 @@ class TestScanCommand:
         assert len(data["runs"][0]["results"]) > 0
 
     def test_scan_depth_fast(self) -> None:
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
         result = self.runner.invoke(
-            cli,
-            ["scan", str(_FIXTURES_DIR / "clean" / "normal_tool.py"), "--depth", "fast"],
+            cli, ["scan", path, "--depth", "fast"],
         )
         assert result.exit_code == 0
 
     def test_scan_depth_deep(self) -> None:
+        path = str(_FIXTURES_DIR / "clean" / "normal_tool.py")
         result = self.runner.invoke(
-            cli,
-            ["scan", str(_FIXTURES_DIR / "clean" / "normal_tool.py"), "--depth", "deep"],
+            cli, ["scan", path, "--depth", "deep"],
         )
         assert result.exit_code == 0
 

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from icu.analyzer.scanner import Scanner
 from icu.reputation.database import ReputationDB
 from icu.reputation.models import Signature
@@ -38,7 +36,9 @@ class TestScannerCleanFiles:
 
 
 class TestScannerMaliciousFiles:
-    def test_prompt_injection_skill(self, scanner: Scanner, malicious_dir: Path) -> None:
+    def test_prompt_injection_skill(
+        self, scanner: Scanner, malicious_dir: Path,
+    ) -> None:
         result = scanner.scan_file(malicious_dir / "prompt_injection_skill.md")
         assert result.risk_level in ("high", "critical")
         assert len(result.findings) > 0
@@ -69,16 +69,22 @@ class TestScannerMaliciousFiles:
 
 
 class TestScannerTieredPipeline:
-    def test_auto_escalates_on_suspicious(self, scanner: Scanner, malicious_dir: Path) -> None:
+    def test_auto_escalates_on_suspicious(
+        self, scanner: Scanner, malicious_dir: Path,
+    ) -> None:
         """Auto depth should trigger deep scan when heuristics find issues."""
-        result = scanner.scan_file(malicious_dir / "obfuscated_payload.py", depth="auto")
+        path = malicious_dir / "obfuscated_payload.py"
+        result = scanner.scan_file(path, depth="auto")
         # Deep scan findings (entropy/deobfuscation) should be present
         assert len(result.findings) > 0
 
-    def test_fast_depth_skips_deep(self, scanner: Scanner, malicious_dir: Path) -> None:
+    def test_fast_depth_skips_deep(
+        self, scanner: Scanner, malicious_dir: Path,
+    ) -> None:
         """Fast depth should only run heuristics."""
-        result_fast = scanner.scan_file(malicious_dir / "obfuscated_payload.py", depth="fast")
-        result_deep = scanner.scan_file(malicious_dir / "obfuscated_payload.py", depth="deep")
+        path = malicious_dir / "obfuscated_payload.py"
+        result_fast = scanner.scan_file(path, depth="fast")
+        result_deep = scanner.scan_file(path, depth="deep")
         # Deep should have at least as many findings as fast
         assert len(result_deep.findings) >= len(result_fast.findings)
 
@@ -97,11 +103,13 @@ class TestScannerTieredPipeline:
 class TestScannerCaching:
     def test_repeated_scan_uses_cache(self, scanner: Scanner, clean_dir: Path) -> None:
         file_path = clean_dir / "normal_tool.py"
-        result1 = scanner.scan_file(file_path)
+        scanner.scan_file(file_path)
         result2 = scanner.scan_file(file_path)
         assert result2.cached is True
 
-    def test_cache_preserves_risk_level(self, scanner: Scanner, malicious_dir: Path) -> None:
+    def test_cache_preserves_risk_level(
+        self, scanner: Scanner, malicious_dir: Path,
+    ) -> None:
         file_path = malicious_dir / "prompt_injection_skill.md"
         result1 = scanner.scan_file(file_path)
         result2 = scanner.scan_file(file_path)
@@ -109,7 +117,9 @@ class TestScannerCaching:
 
 
 class TestScannerReputationDB:
-    def test_known_good_hash_passes(self, tmp_db: ReputationDB, clean_dir: Path) -> None:
+    def test_known_good_hash_passes(
+        self, tmp_db: ReputationDB, clean_dir: Path,
+    ) -> None:
         from icu.reputation.hasher import hash_file
 
         file_path = clean_dir / "normal_tool.py"

@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from icu.analyzer.patterns import DETECTION_RULES, CompiledRuleSet
+from icu.analyzer.patterns import DETECTION_RULES
 from icu.analyzer.scanner import Scanner
 from icu.reputation.converter import threat_sig_to_rule, threat_sigs_to_rules
-from icu.reputation.database import ReputationDB, seed_default_signatures
+from icu.reputation.database import ReputationDB
 from icu.reputation.models import ThreatSignature
 
 
@@ -33,7 +31,10 @@ class TestThreatSigToRule:
         assert rule.description.startswith("[dynamic]")
 
     def test_ts_prefix_format(self) -> None:
-        sig = ThreatSignature(id=42, name="x", category="c", pattern=".", severity="info")
+        sig = ThreatSignature(
+            id=42, name="x", category="c",
+            pattern=".", severity="info",
+        )
         rule = threat_sig_to_rule(sig)
         assert rule is not None
         assert rule.rule_id == "TS-042"
@@ -76,9 +77,18 @@ class TestThreatSigToRule:
 class TestThreatSigsToRules:
     def test_batch_filters_invalid(self) -> None:
         sigs = [
-            ThreatSignature(id=1, name="good", category="c", pattern="ok", severity="info"),
-            ThreatSignature(id=2, name="bad", category="c", pattern="[broken", severity="info"),
-            ThreatSignature(id=3, name="good2", category="c", pattern="ok2", severity="info"),
+            ThreatSignature(
+                id=1, name="good", category="c",
+                pattern="ok", severity="info",
+            ),
+            ThreatSignature(
+                id=2, name="bad", category="c",
+                pattern="[broken", severity="info",
+            ),
+            ThreatSignature(
+                id=3, name="good2", category="c",
+                pattern="ok2", severity="info",
+            ),
         ]
         rules = threat_sigs_to_rules(sigs)
         assert len(rules) == 2
