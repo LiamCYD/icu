@@ -161,8 +161,8 @@ export default async function DashboardPage() {
           <h2 className="display-heading text-6xl sm:text-8xl lg:text-[131px] lg:leading-none">
             We all see you
           </h2>
-          <p className="light-text text-xl sm:text-2xl lg:text-[40px]">
-            Community driven
+          <p className="light-text max-w-[900px] text-xl sm:text-2xl lg:text-[40px] lg:leading-snug">
+            We&apos;re early and we&apos;ll get things wrong. Help us get it right — report false positives, contribute rules, and shape a more precise scanner together.
           </p>
         </div>
       </section>
