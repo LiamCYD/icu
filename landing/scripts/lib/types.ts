@@ -54,4 +54,4 @@ export interface MarketplaceDef {
   description: string;
 }
 
-export type MarketplaceName = "npm" | "PyPI" | "Smithery" | "Glama";
+export type MarketplaceName = "npm" | "PyPI" | "Smithery" | "Glama" | "MCP Registry" | "SkillsMP" | "PulseMCP";
