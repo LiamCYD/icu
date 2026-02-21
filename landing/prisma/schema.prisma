@@ -86,6 +86,8 @@ model Finding {
   lineNumber  Int
   matchedText String
   context     String @default("")
+  confidence  Float?
+  disclaimer  String?
 
   @@index([scanId])
   @@index([ruleId])

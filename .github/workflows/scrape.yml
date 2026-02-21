@@ -1,0 +1,72 @@
+name: Scrape Marketplaces
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      marketplace:
+        description: "Marketplace to scrape (leave empty for all)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - npm
+          - PyPI
+          - Smithery
+          - Glama
+      max_packages:
+        description: "Max packages per marketplace"
+        required: false
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ICU scanner
+        run: pip install -e ".[mcp]"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: landing
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: landing
+        run: npx prisma generate
+
+      - name: Run scraper
+        working-directory: landing
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SMITHERY_API_TOKEN: ${{ secrets.SMITHERY_API_TOKEN }}
+          MARKETPLACE: ${{ inputs.marketplace }}
+          MAX_PACKAGES: ${{ inputs.max_packages }}
+        run: npx tsx scripts/scrape.ts 2>&1 | tee scrape.log
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-log-${{ github.run_id }}
+          path: landing/scrape.log
+          retention-days: 14

@@ -55,3 +55,27 @@ export const NAV_LINKS = [
 ] as const;
 
 export const DEFAULT_PAGE_SIZE = 20;
+
+export const CONFIDENCE_TIERS = ["High", "Medium", "Low", "Informational"] as const;
+export type ConfidenceTier = (typeof CONFIDENCE_TIERS)[number];
+
+export const CONFIDENCE_TIER_LABELS: Record<ConfidenceTier, string> = {
+  High: "High Confidence",
+  Medium: "Medium Confidence",
+  Low: "Low Confidence",
+  Informational: "Informational",
+};
+
+export const CONFIDENCE_TIER_CLASSES: Record<ConfidenceTier, string> = {
+  High: "bg-[#e05252]/10 text-[#e05252] border-[#e05252]/20",
+  Medium: "bg-[#d4a853]/10 text-[#d4a853] border-[#d4a853]/20",
+  Low: "bg-[#6b8a7a]/10 text-[#6b8a7a] border-[#6b8a7a]/20",
+  Informational: "bg-[#5bb8d4]/10 text-[#5bb8d4] border-[#5bb8d4]/20",
+};
+
+export function getConfidenceTier(score: number): ConfidenceTier {
+  if (score >= 0.8) return "High";
+  if (score >= 0.5) return "Medium";
+  if (score >= 0.2) return "Low";
+  return "Informational";
+}
