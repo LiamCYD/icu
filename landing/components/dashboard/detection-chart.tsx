@@ -54,6 +54,8 @@ export function DetectionChart({ data }: DetectionChartProps) {
                 color: "#ffffff",
                 fontSize: 13,
               }}
+              itemStyle={{ color: "#ffffff" }}
+              labelStyle={{ color: "rgba(255,255,255,0.7)" }}
             />
             <Area
               type="monotone"

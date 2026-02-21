@@ -38,6 +38,9 @@ const TOOLTIP_STYLE = {
   fontSize: 13,
 };
 
+const TOOLTIP_ITEM_STYLE = { color: "#ffffff" };
+const TOOLTIP_LABEL_STYLE = { color: "rgba(255,255,255,0.7)" };
+
 const AXIS_TICK = { fill: "rgba(255,255,255,0.4)", fontSize: 11 };
 const GRID_STROKE = "rgba(38,79,94,0.3)";
 
@@ -99,7 +102,7 @@ export function TrendsCharts({
                 tickLine={false}
                 allowDecimals={false}
               />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
               <Area
                 type="monotone"
                 dataKey="count"
@@ -134,7 +137,7 @@ export function TrendsCharts({
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
                 <Legend
                   wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
                 />
@@ -171,7 +174,7 @@ export function TrendsCharts({
                   tickLine={false}
                   width={90}
                 />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                   {categoryChartData.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
@@ -204,7 +207,7 @@ export function TrendsCharts({
                 tickLine={false}
                 allowDecimals={false}
               />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
               <Bar
                 dataKey="total"
                 name="Total"
