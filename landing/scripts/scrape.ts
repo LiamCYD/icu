@@ -1,8 +1,12 @@
 import "dotenv/config";
 import { rm } from "node:fs/promises";
 import { relative } from "node:path";
+import ws from "ws";
+import { neonConfig } from "@neondatabase/serverless";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
+
+neonConfig.webSocketConstructor = ws;
 import { MARKETPLACES, SCAN_STALENESS_HOURS } from "./lib/config";
 import { runIcuScan } from "./lib/scanner";
 import { categoryFromRuleId, normalizeSeverity, worstRisk } from "./lib/rule-category-map";
