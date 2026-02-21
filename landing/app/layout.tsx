@@ -8,7 +8,11 @@ export const metadata: Metadata = {
   description:
     "Real-time scanning of AI marketplaces for malicious packages. Prompt injection, data exfiltration, and obfuscation detection.",
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/favicon-180.png",
   },
   metadataBase: new URL("https://icu-cli.com"),
   openGraph: {
