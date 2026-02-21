@@ -146,7 +146,9 @@ async function processPackage(
     // Create findings
     let findingsCount = 0;
     for (const fileResult of scanOutput.results) {
-      const filePath = relative(extractedPath, fileResult.file) || fileResult.file;
+      const filePath = fileResult.file
+        ? relative(extractedPath, fileResult.file) || fileResult.file
+        : "unknown";
       for (const finding of fileResult.findings) {
         const { score, disclaimer } = scoreConfidence(finding, filePath, fileResult.findings);
         await prisma.finding.create({

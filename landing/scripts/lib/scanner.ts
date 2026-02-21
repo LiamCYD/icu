@@ -21,7 +21,9 @@ export async function runIcuScan(targetPath: string): Promise<IcuScanOutput> {
         }
 
         try {
-          const output = JSON.parse(stdout) as IcuScanOutput;
+          // Sanitize invalid Unicode escape sequences before parsing
+          const sanitized = stdout.replace(/\\u(?![0-9a-fA-F]{4})/g, "\\\\u");
+          const output = JSON.parse(sanitized) as IcuScanOutput;
           resolve(output);
         } catch {
           // Exit code might be non-zero for findings but output should still be valid JSON
