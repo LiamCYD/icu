@@ -44,12 +44,12 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <form onSubmit={handleSearch} className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
         <Input
           placeholder="Search packages..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 bg-secondary/50 border-border/50"
+          className="pl-9 bg-transparent border-border"
         />
       </form>
 
@@ -57,7 +57,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("risk") || "all"}
         onValueChange={(v) => updateParam("risk", v)}
       >
-        <SelectTrigger className="w-[140px] bg-secondary/50 border-border/50">
+        <SelectTrigger className="w-[140px] bg-transparent border-border">
           <SelectValue placeholder="Risk level" />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +74,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("category") || "all"}
         onValueChange={(v) => updateParam("category", v)}
       >
-        <SelectTrigger className="w-[180px] bg-secondary/50 border-border/50">
+        <SelectTrigger className="w-[180px] bg-transparent border-border">
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -91,7 +91,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("marketplace") || "all"}
         onValueChange={(v) => updateParam("marketplace", v)}
       >
-        <SelectTrigger className="w-[140px] bg-secondary/50 border-border/50">
+        <SelectTrigger className="w-[140px] bg-transparent border-border">
           <SelectValue placeholder="Marketplace" />
         </SelectTrigger>
         <SelectContent>

@@ -8,7 +8,6 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { ThreatsTable } from "@/components/threats/threats-table";
 import { ThreatFilters } from "@/components/threats/threat-filters";
 import { Pagination } from "@/components/shared/pagination";
-import { Shield } from "lucide-react";
 
 interface ThreatsPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -36,22 +35,19 @@ export default async function ThreatsPage({ searchParams }: ThreatsPageProps) {
   const pagination = paginationMeta(total, page, limit);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Threat Database</h1>
-          <p className="text-sm text-muted-foreground">
-            {total} malicious packages detected across AI marketplaces
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
+      <div>
+        <h1 className="display-heading text-3xl">Threat Database</h1>
+        <p className="light-text mt-1 text-lg opacity-55">
+          {total} malicious packages detected across AI marketplaces
+        </p>
       </div>
 
       <Suspense>
         <ThreatFilters marketplaces={marketplaces.map((m) => m.name)} />
       </Suspense>
 
-      <div className="glass-card overflow-hidden rounded-lg">
+      <div className="overflow-hidden rounded-[22px] border border-border">
         <ThreatsTable threats={packages} />
       </div>
 

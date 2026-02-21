@@ -2,6 +2,122 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Towards — display/heading font */
+@font-face {
+  font-family: "Towards";
+  src: url("/fonts/towards/Towards.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Univa Nova — body font, all weights */
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Hairline.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-HairlineItalic.woff2") format("woff2");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-SemiBoldItalic.woff2") format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-Heavy.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-HeavyItalic.woff2") format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Univa Nova";
+  src: url("/fonts/univa-nova/UnivaNova-ThinItalic.woff2") format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -44,63 +160,57 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* ICU custom colors */
-  --color-glass-border: var(--glass-border);
-  --color-glass-edge: var(--glass-edge);
-  --color-icu-accent: var(--icu-accent);
-  --color-icu-accent-hover: var(--icu-accent-hover);
-  --color-surface: var(--surface);
-  --color-elevated: var(--elevated);
+  /* ICU brand font families */
+  --font-heading: "Towards", sans-serif;
+  --font-body: "Univa Nova", sans-serif;
 }
 
-/* Dark-first theme — matches the original ICU glassmorphism design */
 :root {
-  --radius: 0.875rem;
+  --radius: 1.375rem; /* 22px — matches Figma card radius */
 
-  /* shadcn semantic tokens — tuned for ICU dark theme */
-  --background: #060608;
-  --foreground: #e8e8ec;
-  --card: rgba(18, 18, 22, 0.78);
-  --card-foreground: #e8e8ec;
-  --popover: rgba(18, 18, 22, 0.95);
-  --popover-foreground: #e8e8ec;
-  --primary: #0066cc;
+  /* ICU brand palette — derived from Figma */
+  --background: #172322;
+  --foreground: #ffffff;
+  --card: #172322;
+  --card-foreground: #ffffff;
+  --popover: #0d1b20;
+  --popover-foreground: #ffffff;
+  --primary: #3a8a8c;
   --primary-foreground: #ffffff;
-  --secondary: rgba(28, 28, 34, 0.65);
-  --secondary-foreground: #e8e8ec;
-  --muted: rgba(28, 28, 34, 0.65);
-  --muted-foreground: #9898a0;
-  --accent: rgba(28, 28, 34, 0.65);
-  --accent-foreground: #e8e8ec;
-  --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: #0066cc;
+  --secondary: rgba(38, 79, 94, 0.3);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(38, 79, 94, 0.2);
+  --muted-foreground: rgba(255, 255, 255, 0.55);
+  --accent: rgba(38, 79, 94, 0.3);
+  --accent-foreground: #ffffff;
+  --destructive: #e05252;
+  --border: #264f5e;
+  --input: #264f5e;
+  --ring: #3a8a8c;
 
-  /* Chart colors */
-  --chart-1: #a855f7;
-  --chart-2: #ef4444;
-  --chart-3: #eab308;
-  --chart-4: #f97316;
-  --chart-5: #3b82f6;
+  /* Chart colors — teal-accented palette */
+  --chart-1: #3a8a8c;
+  --chart-2: #e05252;
+  --chart-3: #d4a853;
+  --chart-4: #e08a4a;
+  --chart-5: #5ba3c9;
 
   /* Sidebar */
-  --sidebar: rgba(18, 18, 22, 0.78);
-  --sidebar-foreground: #e8e8ec;
-  --sidebar-primary: #0066cc;
+  --sidebar: #0d1b20;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3a8a8c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(28, 28, 34, 0.65);
-  --sidebar-accent-foreground: #e8e8ec;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #0066cc;
+  --sidebar-accent: rgba(38, 79, 94, 0.3);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #264f5e;
+  --sidebar-ring: #3a8a8c;
 
-  /* ICU custom tokens */
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-edge: rgba(255, 255, 255, 0.18);
-  --icu-accent: #0066cc;
-  --icu-accent-hover: #1a7ae6;
-  --surface: rgba(18, 18, 22, 0.78);
-  --elevated: rgba(28, 28, 34, 0.65);
+  /* ICU severity colors */
+  --icu-critical: #e05252;
+  --icu-high: #5bb8d4;
+  --icu-medium: #6b8a7a;
+  --icu-low: #6b8a7a;
+  --icu-clean: #3a8a8c;
 }
 
 @layer base {
@@ -109,33 +219,69 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
   }
 }
 
-/* Glass card utility */
+/* ICU card — clean border, no glassmorphism */
+.icu-card {
+  background: transparent;
+  border: 1px solid #264f5e;
+  border-radius: var(--radius);
+}
+
+/* Glass card — kept for backwards compat, updated to match brand */
 .glass-card {
-  background: var(--surface);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    inset 0 1px 0 0 var(--glass-edge),
-    0 4px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  background: rgba(23, 35, 34, 0.6);
+  border: 1px solid #264f5e;
 }
 
-/* Page background gradient */
+/* Page background */
 .page-bg {
-  background:
-    radial-gradient(ellipse 90% 45% at 50% -15%, rgba(0, 40, 80, 0.25), transparent 50%),
-    radial-gradient(ellipse 70% 35% at 85% 55%, rgba(0, 30, 60, 0.12), transparent),
-    var(--background);
+  background: #172322;
 }
 
-/* Gradient heading text */
-.gradient-text {
-  background: linear-gradient(180deg, #ffffff 0%, #b8b8c4 50%, #8a8a98 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Hero background — placeholder for video/image */
+.hero-bg {
+  position: relative;
+  background: #172322;
+}
+.hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(38, 79, 94, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+/* CTA section background */
+.cta-bg {
+  position: relative;
+  background: #0d1b20;
+}
+.cta-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Placeholder — replace with background image */
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(38, 79, 94, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+/* Heading text style — large display text */
+.display-heading {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+/* Light body text — matches Univa Nova Hairline from Figma */
+.light-text {
+  font-family: var(--font-body);
+  font-weight: 200;
+  color: #ffffff;
 }

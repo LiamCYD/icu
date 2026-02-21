@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -9,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { GITHUB_REPO, CATEGORY_LABELS, type Category } from "@/lib/constants";
-import { Shield, Eye, Zap, Lock, ChevronRight } from "lucide-react";
+import { Eye, Zap, Lock, ChevronRight } from "lucide-react";
 
 const DETECTION_RULES = [
   { id: "PI-001", category: "prompt_injection", severity: "critical", description: "System prompt override / instruction hijacking" },
@@ -60,38 +59,40 @@ const FAQ = [
   },
 ];
 
+const SEVERITY_CLASSES: Record<string, string> = {
+  critical: "border-[#e05252]/20 bg-[#e05252]/10 text-[#e05252]",
+  high: "border-[#5bb8d4]/20 bg-[#5bb8d4]/10 text-[#5bb8d4]",
+  medium: "border-[#d4a853]/20 bg-[#d4a853]/10 text-[#d4a853]",
+  low: "border-[#6b8a7a]/20 bg-[#6b8a7a]/10 text-[#6b8a7a]",
+};
+
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">About ICU</h1>
-          <p className="text-sm text-muted-foreground">
-            Methodology, detection rules, and frequently asked questions
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1600px] space-y-8 px-6 py-12 md:px-20">
+      <div>
+        <h1 className="display-heading text-3xl">About ICU</h1>
+        <p className="light-text mt-1 text-lg opacity-55">
+          Methodology, detection rules, and frequently asked questions
+        </p>
       </div>
 
       {/* Mission */}
-      <Card className="glass-card border-border/50">
-        <CardContent className="space-y-4 p-6">
-          <h2 className="text-lg font-semibold">Mission</h2>
-          <p className="text-muted-foreground">
-            AI development tools are increasingly targeted by supply chain
-            attacks. Malicious MCP servers, poisoned agent plugins, and
-            trojanized npm/PyPI packages can exfiltrate secrets, inject
-            prompts, and execute arbitrary code — all while appearing
-            legitimate.
-          </p>
-          <p className="text-muted-foreground">
-            ICU exists to make these threats visible. We continuously scan AI
-            marketplaces, detect malicious patterns, and publish our findings
-            as a transparency report — naming and shaming bad actors to
-            protect the community.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="rounded-[22px] border border-border p-6 space-y-4">
+        <h2 className="display-heading text-xl">Mission</h2>
+        <p className="text-white/55">
+          AI development tools are increasingly targeted by supply chain
+          attacks. Malicious MCP servers, poisoned agent plugins, and
+          trojanized npm/PyPI packages can exfiltrate secrets, inject
+          prompts, and execute arbitrary code — all while appearing
+          legitimate.
+        </p>
+        <p className="text-white/55">
+          ICU exists to make these threats visible. We continuously scan AI
+          marketplaces, detect malicious patterns, and publish our findings
+          as a transparency report — naming and shaming bad actors to
+          protect the community.
+        </p>
+      </div>
 
       {/* How it works */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -112,100 +113,86 @@ export default function AboutPage() {
             desc: "Public threat database with full findings and code context",
           },
         ].map((step) => (
-          <Card key={step.title} className="glass-card border-border/50">
-            <CardContent className="space-y-2 p-6 text-center">
-              <step.icon className="mx-auto h-8 w-8 text-primary" />
-              <h3 className="font-semibold">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.desc}</p>
-            </CardContent>
-          </Card>
+          <div key={step.title} className="rounded-[22px] border border-border p-6 text-center space-y-2">
+            <step.icon className="mx-auto h-8 w-8 text-[#3a8a8c]" />
+            <h3 className="font-semibold">{step.title}</h3>
+            <p className="text-sm text-white/55">{step.desc}</p>
+          </div>
         ))}
       </div>
 
       {/* Detection rules */}
-      <Card className="glass-card border-border/50">
-        <CardHeader>
-          <CardTitle>Detection Rules ({DETECTION_RULES.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="w-[80px]">Rule</TableHead>
-                <TableHead className="w-[100px]">Severity</TableHead>
-                <TableHead className="hidden sm:table-cell w-[150px]">
-                  Category
-                </TableHead>
-                <TableHead>Description</TableHead>
+      <div className="overflow-hidden rounded-[22px] border border-border">
+        <div className="px-6 py-4">
+          <h2 className="display-heading text-xl">Detection Rules ({DETECTION_RULES.length})</h2>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-[80px]">Rule</TableHead>
+              <TableHead className="w-[100px]">Severity</TableHead>
+              <TableHead className="hidden sm:table-cell w-[150px]">
+                Category
+              </TableHead>
+              <TableHead>Description</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {DETECTION_RULES.map((rule) => (
+              <TableRow
+                key={rule.id}
+                className="border-border hover:bg-secondary/30"
+              >
+                <TableCell className="font-mono text-xs">
+                  {rule.id}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs capitalize ${SEVERITY_CLASSES[rule.severity] || ""}`}
+                  >
+                    {rule.severity}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden text-sm text-white/50 sm:table-cell">
+                  {CATEGORY_LABELS[rule.category as Category]}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {rule.description}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {DETECTION_RULES.map((rule) => (
-                <TableRow
-                  key={rule.id}
-                  className="border-border/50 hover:bg-secondary/50"
-                >
-                  <TableCell className="font-mono text-xs">
-                    {rule.id}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs capitalize ${
-                        rule.severity === "critical"
-                          ? "border-red-500/20 bg-red-500/10 text-red-400"
-                          : rule.severity === "high"
-                            ? "border-orange-500/20 bg-orange-500/10 text-orange-400"
-                            : rule.severity === "medium"
-                              ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-400"
-                              : "border-blue-500/20 bg-blue-500/10 text-blue-400"
-                      }`}
-                    >
-                      {rule.severity}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
-                    {CATEGORY_LABELS[rule.category as Category]}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {rule.description}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* FAQ */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold">
+        <h2 className="display-heading mb-4 text-xl">
           Frequently Asked Questions
         </h2>
         <div className="space-y-3">
           {FAQ.map((item) => (
-            <Card key={item.q} className="glass-card border-border/50">
-              <CardContent className="p-4">
-                <h3 className="flex items-center gap-2 font-medium">
-                  <ChevronRight className="h-4 w-4 text-primary" />
-                  {item.q}
-                </h3>
-                <p className="mt-2 pl-6 text-sm text-muted-foreground">
-                  {item.a}
-                </p>
-              </CardContent>
-            </Card>
+            <div key={item.q} className="rounded-[22px] border border-border p-4">
+              <h3 className="flex items-center gap-2 font-medium">
+                <ChevronRight className="h-4 w-4 text-[#3a8a8c]" />
+                {item.q}
+              </h3>
+              <p className="mt-2 pl-6 text-sm text-white/55">
+                {item.a}
+              </p>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Links */}
-      <div className="text-center text-sm text-muted-foreground">
+      <div className="text-center text-sm text-white/50">
         <a
           href={GITHUB_REPO}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary transition-colors hover:text-primary/80"
+          className="text-[#3a8a8c] transition-colors hover:text-[#3a8a8c]/70"
         >
           View on GitHub
         </a>

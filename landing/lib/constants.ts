@@ -1,22 +1,22 @@
-export const GITHUB_REPO = "https://github.com/your-org/i-see-u";
+export const GITHUB_REPO = "https://github.com/LiamCYD/icu";
 
 export const RISK_LEVELS = ["critical", "high", "medium", "low", "clean"] as const;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 
 export const RISK_COLORS: Record<RiskLevel, string> = {
-  critical: "#ef4444",
-  high: "#f97316",
-  medium: "#eab308",
-  low: "#3b82f6",
-  clean: "#22c55e",
+  critical: "#e05252",
+  high: "#5bb8d4",
+  medium: "#6b8a7a",
+  low: "#6b8a7a",
+  clean: "#3a8a8c",
 };
 
 export const RISK_BG_CLASSES: Record<RiskLevel, string> = {
-  critical: "bg-red-500/10 text-red-400 border-red-500/20",
-  high: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  low: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  clean: "bg-green-500/10 text-green-400 border-green-500/20",
+  critical: "bg-[#e05252]/10 text-[#e05252] border-[#e05252]/20",
+  high: "bg-[#5bb8d4]/10 text-[#5bb8d4] border-[#5bb8d4]/20",
+  medium: "bg-[#d4a853]/10 text-[#d4a853] border-[#d4a853]/20",
+  low: "bg-[#6b8a7a]/10 text-[#6b8a7a] border-[#6b8a7a]/20",
+  clean: "bg-[#3a8a8c]/10 text-[#3a8a8c] border-[#3a8a8c]/20",
 };
 
 export const CATEGORIES = [
@@ -37,15 +37,15 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 };
 
 export const CATEGORY_COLORS: Record<Category, string> = {
-  prompt_injection: "#a855f7",
-  data_exfiltration: "#ef4444",
-  obfuscation: "#eab308",
-  suspicious_commands: "#f97316",
-  network_suspicious: "#3b82f6",
+  prompt_injection: "#3a8a8c",
+  data_exfiltration: "#e05252",
+  obfuscation: "#d4a853",
+  suspicious_commands: "#e08a4a",
+  network_suspicious: "#5ba3c9",
 };
 
 export const NAV_LINKS = [
-  { href: "/", label: "Dashboard" },
+  { href: "/cli", label: "CLI" },
   { href: "/threats", label: "Threats" },
   { href: "/authors", label: "Authors" },
   { href: "/trends", label: "Trends" },

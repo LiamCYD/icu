@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Bug, Search, Store } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
 
@@ -10,54 +9,35 @@ interface StatCardsProps {
 }
 
 const STATS_CONFIG = [
-  {
-    key: "totalCritical" as const,
-    label: "Critical Threats",
-    icon: AlertTriangle,
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-  },
-  {
-    key: "totalFindings" as const,
-    label: "Total Findings",
-    icon: Bug,
-    color: "text-orange-400",
-    bg: "bg-orange-500/10",
-  },
-  {
-    key: "totalPackages" as const,
-    label: "Packages Scanned",
-    icon: Search,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-  },
-  {
-    key: "marketplaceCount" as const,
-    label: "Marketplaces",
-    icon: Store,
-    color: "text-green-400",
-    bg: "bg-green-500/10",
-  },
+  { key: "totalCritical" as const, label: "Critical threats", icon: AlertTriangle, color: "text-[#e05252]", bg: "bg-[#e05252]/10" },
+  { key: "totalFindings" as const, label: "Total findings", icon: Bug, color: "text-[#e08a4a]", bg: "bg-[#e08a4a]/10" },
+  { key: "totalPackages" as const, label: "Packages scanned", icon: Search, color: "text-[#5ba3c9]", bg: "bg-[#5ba3c9]/10" },
+  { key: "marketplaceCount" as const, label: "Marketplaces", icon: Store, color: "text-[#3a8a8c]", bg: "bg-[#3a8a8c]/10" },
 ];
 
 export function StatCards(props: StatCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
       {STATS_CONFIG.map((stat) => {
         const Icon = stat.icon;
         const value = props[stat.key];
         return (
-          <Card key={stat.key} className="glass-card border-border/50">
-            <CardContent className="flex items-center gap-4 p-4">
-              <div className={`rounded-lg p-2.5 ${stat.bg}`}>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{formatNumber(value)}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={stat.key}
+            className="flex h-[176px] items-center gap-8 overflow-hidden rounded-[22px] border border-border px-8"
+          >
+            <div className={`shrink-0 rounded-lg p-2.5 ${stat.bg}`}>
+              <Icon className={`h-6 w-6 ${stat.color}`} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="display-heading text-6xl leading-none lg:text-7xl">
+                {formatNumber(value)}
+              </span>
+              <span className="light-text text-lg">
+                {stat.label}
+              </span>
+            </div>
+          </div>
         );
       })}
     </div>

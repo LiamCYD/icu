@@ -1,6 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Code } from "lucide-react";
 
 const API_ENDPOINTS = [
   {
@@ -67,56 +65,51 @@ const API_ENDPOINTS = [
 
 export default function ApiDocsPage() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
-      <div className="flex items-center gap-3">
-        <Code className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">API Documentation</h1>
-          <p className="text-sm text-muted-foreground">
-            {API_ENDPOINTS.length} REST endpoints for threat intelligence data
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
+      <div>
+        <h1 className="display-heading text-3xl">API Documentation</h1>
+        <p className="light-text mt-1 text-lg opacity-55">
+          {API_ENDPOINTS.length} REST endpoints for threat intelligence data
+        </p>
       </div>
 
-      <Card className="glass-card border-border/50">
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">
-            All endpoints return JSON responses. Pagination is included where
-            applicable. Rate limit: 100 requests/minute/IP.
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Base URL:{" "}
-            <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">
-              https://icu.example.com
-            </code>
-          </p>
-        </CardContent>
-      </Card>
+      <div className="rounded-[22px] border border-border p-6">
+        <p className="text-sm text-white/55">
+          All endpoints return JSON responses. Pagination is included where
+          applicable. Rate limit: 100 requests/minute/IP.
+        </p>
+        <p className="mt-2 text-sm text-white/55">
+          Base URL:{" "}
+          <code className="rounded bg-border/30 px-1.5 py-0.5 text-xs text-white">
+            https://icu.example.com
+          </code>
+        </p>
+      </div>
 
       <div className="space-y-6">
         {API_ENDPOINTS.map((endpoint) => (
-          <Card
+          <div
             key={endpoint.path}
-            className="glass-card border-border/50 overflow-hidden"
+            className="overflow-hidden rounded-[22px] border border-border"
           >
-            <CardHeader className="border-b border-border/50 pb-3">
-              <CardTitle className="flex items-center gap-3">
+            <div className="border-b border-border px-6 py-4">
+              <div className="flex items-center gap-3">
                 <Badge
-                  className="bg-green-500/10 text-green-400 border-green-500/20 font-mono text-xs"
+                  className="bg-[#3a8a8c]/10 text-[#3a8a8c] border-[#3a8a8c]/20 font-mono text-xs"
                   variant="outline"
                 >
                   {endpoint.method}
                 </Badge>
                 <code className="text-sm">{endpoint.path}</code>
-              </CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              </div>
+              <p className="mt-1 text-sm text-white/55">
                 {endpoint.description}
               </p>
-            </CardHeader>
-            <CardContent className="space-y-4 p-4">
+            </div>
+            <div className="space-y-4 p-4">
               {endpoint.params.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                  <h4 className="mb-2 text-xs font-medium uppercase text-white/50">
                     Parameters
                   </h4>
                   <div className="space-y-2">
@@ -125,7 +118,7 @@ export default function ApiDocsPage() {
                         key={param.name}
                         className="flex items-start gap-3 text-sm"
                       >
-                        <code className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs">
+                        <code className="shrink-0 rounded bg-border/30 px-1.5 py-0.5 text-xs text-white">
                           {param.name}
                         </code>
                         <Badge
@@ -134,7 +127,7 @@ export default function ApiDocsPage() {
                         >
                           {param.type}
                         </Badge>
-                        <span className="text-muted-foreground">
+                        <span className="text-white/55">
                           {param.description}
                         </span>
                       </div>
@@ -144,15 +137,15 @@ export default function ApiDocsPage() {
               )}
 
               <div>
-                <h4 className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                <h4 className="mb-2 text-xs font-medium uppercase text-white/50">
                   Example
                 </h4>
-                <pre className="overflow-x-auto rounded-md bg-black/40 border border-border/50 p-3 text-xs">
-                  <code className="text-green-400">{endpoint.example}</code>
+                <pre className="overflow-x-auto rounded-md bg-[#0d1b20] border border-border p-3 text-xs">
+                  <code className="text-[#3a8a8c]">{endpoint.example}</code>
                 </pre>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>

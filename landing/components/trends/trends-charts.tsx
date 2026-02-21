@@ -15,7 +15,6 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CATEGORY_LABELS,
   CATEGORY_COLORS,
@@ -32,12 +31,15 @@ interface TrendsChartsProps {
 }
 
 const TOOLTIP_STYLE = {
-  background: "rgba(18,18,22,0.95)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "8px",
-  color: "#e8e8ec",
+  background: "#0d1b20",
+  border: "1px solid #264f5e",
+  borderRadius: "12px",
+  color: "#ffffff",
   fontSize: 13,
 };
+
+const AXIS_TICK = { fill: "rgba(255,255,255,0.4)", fontSize: 11 };
+const GRID_STROKE = "rgba(38,79,94,0.3)";
 
 export function TrendsCharts({
   dailyTrend,
@@ -50,200 +52,178 @@ export function TrendsCharts({
     .map(([key, value]) => ({
       name: key.charAt(0).toUpperCase() + key.slice(1),
       value,
-      color: RISK_COLORS[key as RiskLevel] || "#6b7280",
+      color: RISK_COLORS[key as RiskLevel] || "#264f5e",
     }));
 
   const categoryChartData = Object.entries(categoryData).map(
     ([key, value]) => ({
       name: CATEGORY_LABELS[key as Category] || key,
       value,
-      color: CATEGORY_COLORS[key as Category] || "#6b7280",
+      color: CATEGORY_COLORS[key as Category] || "#264f5e",
     })
   );
 
   return (
     <div className="space-y-6">
       {/* Detection timeline */}
-      <Card className="glass-card border-border/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Detection Timeline (30 days)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyTrend}>
-                <defs>
-                  <linearGradient
-                    id="trendGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#0066cc" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0066cc" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.05)"
-                />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: "#9898a0", fontSize: 11 }}
-                  tickFormatter={(v: string) => v.slice(5)}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: "#9898a0", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0066cc"
-                  fill="url(#trendGradient)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="rounded-[22px] border border-border px-8 py-4">
+        <p className="light-text mb-6 text-lg">
+          Detection Timeline (30 days)
+        </p>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={dailyTrend}>
+              <defs>
+                <linearGradient
+                  id="trendGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor="#3a8a8c" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3a8a8c" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+              <XAxis
+                dataKey="date"
+                tick={AXIS_TICK}
+                tickFormatter={(v: string) => v.slice(5)}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#3a8a8c"
+                fill="url(#trendGradient)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Risk distribution pie */}
-        <Card className="glass-card border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Risk Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Legend
-                    wrapperStyle={{ fontSize: 12, color: "#9898a0" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-[22px] border border-border px-8 py-4">
+          <p className="light-text mb-6 text-lg">
+            Risk Distribution
+          </p>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Legend
+                  wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
         {/* Category breakdown */}
-        <Card className="glass-card border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Findings by Category
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryChartData} layout="vertical">
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.05)"
-                    horizontal={false}
-                  />
-                  <XAxis
-                    type="number"
-                    tick={{ fill: "#9898a0", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fill: "#9898a0", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={130}
-                  />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {categoryChartData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Marketplace comparison */}
-      <Card className="glass-card border-border/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Packages by Marketplace
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[250px]">
+        <div className="rounded-[22px] border border-border px-8 py-4">
+          <p className="light-text mb-6 text-lg">
+            Findings by Category
+          </p>
+          <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={marketplaceData}>
+              <BarChart data={categoryChartData} layout="vertical">
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.05)"
+                  stroke={GRID_STROKE}
+                  horizontal={false}
                 />
                 <XAxis
-                  dataKey="name"
-                  tick={{ fill: "#9898a0", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: "#9898a0", fontSize: 11 }}
+                  type="number"
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
                 />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={AXIS_TICK}
+                  axisLine={false}
+                  tickLine={false}
+                  width={130}
+                />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Bar
-                  dataKey="total"
-                  name="Total"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="malicious"
-                  name="Malicious"
-                  fill="#ef4444"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: 12, color: "#9898a0" }}
-                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  {categoryChartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Marketplace comparison */}
+      <div className="rounded-[22px] border border-border px-8 py-4">
+        <p className="light-text mb-6 text-lg">
+          Packages by Marketplace
+        </p>
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={marketplaceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar
+                dataKey="total"
+                name="Total"
+                fill="#3a8a8c"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="malicious"
+                name="Malicious"
+                fill="#e05252"
+                radius={[4, 4, 0, 0]}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

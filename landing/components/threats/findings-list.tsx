@@ -21,7 +21,7 @@ interface FindingsListProps {
 export function FindingsList({ findings }: FindingsListProps) {
   if (findings.length === 0) {
     return (
-      <div className="py-8 text-center text-muted-foreground">
+      <div className="py-8 text-center text-white/50">
         No findings detected — this package appears clean.
       </div>
     );
@@ -38,11 +38,11 @@ export function FindingsList({ findings }: FindingsListProps) {
   return (
     <div className="space-y-4">
       {Array.from(byFile.entries()).map(([filePath, fileFindings]) => (
-        <div key={filePath} className="glass-card overflow-hidden rounded-lg">
-          <div className="border-b border-border/50 px-4 py-2">
-            <code className="text-sm text-muted-foreground">{filePath}</code>
+        <div key={filePath} className="overflow-hidden rounded-[22px] border border-border">
+          <div className="border-b border-border px-4 py-2">
+            <code className="text-sm text-white/50">{filePath}</code>
           </div>
-          <div className="divide-y divide-border/50">
+          <div className="divide-y divide-border">
             {fileFindings.map((f) => (
               <div key={f.id} className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -53,14 +53,14 @@ export function FindingsList({ findings }: FindingsListProps) {
                   <Badge variant="secondary" className="text-xs">
                     {CATEGORY_LABELS[f.category as Category] || f.category}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-white/50">
                     Line {f.lineNumber}
                   </span>
                 </div>
-                <p className="text-sm text-foreground">{f.description}</p>
+                <p className="text-sm">{f.description}</p>
                 {f.context && (
-                  <pre className="overflow-x-auto rounded-md bg-black/40 border border-border/50 p-3 text-xs">
-                    <code className="text-red-400">{f.context}</code>
+                  <pre className="overflow-x-auto rounded-md bg-[#0d1b20] border border-border p-3 text-xs">
+                    <code className="text-[#e05252]">{f.context}</code>
                   </pre>
                 )}
               </div>

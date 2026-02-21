@@ -5,3 +5,4 @@ out/
 .env
 .env.local
 /lib/generated/prisma
+.vercel

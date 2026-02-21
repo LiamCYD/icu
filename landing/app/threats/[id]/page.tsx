@@ -5,7 +5,6 @@ import Link from "next/link";
 import { getThreatById } from "@/lib/queries/threats";
 import { RiskBadge } from "@/components/shared/risk-badge";
 import { FindingsList } from "@/components/threats/findings-list";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import {
   ChevronRight,
@@ -38,31 +37,31 @@ export default async function ThreatDetailPage({
   const mediumCount = findings.filter((f) => f.severity === "medium").length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Link href="/threats" className="transition-colors hover:text-foreground">
+      <nav className="flex items-center gap-1 text-sm text-white/50">
+        <Link href="/threats" className="transition-colors hover:text-white">
           Threats
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">{threat.name}</span>
+        <span className="text-white">{threat.name}</span>
       </nav>
 
       {/* Header */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <RiskBadge level={threat.riskLevel} className="text-sm" />
-          <h1 className="text-2xl font-bold">{threat.name}</h1>
-          <span className="text-sm text-muted-foreground">
+          <h1 className="display-heading text-3xl">{threat.name}</h1>
+          <span className="text-sm text-white/50">
             v{threat.version}
           </span>
         </div>
 
         {threat.description && (
-          <p className="text-muted-foreground">{threat.description}</p>
+          <p className="text-white/55">{threat.description}</p>
         )}
 
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-4 text-sm text-white/50">
           <span className="flex items-center gap-1.5">
             <Store className="h-4 w-4" />
             {threat.marketplace.name}
@@ -70,7 +69,7 @@ export default async function ThreatDetailPage({
           {threat.author && (
             <Link
               href={`/authors/${threat.author.id}`}
-              className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+              className="flex items-center gap-1.5 transition-colors hover:text-white"
             >
               <User className="h-4 w-4" />
               {threat.author.name}
@@ -91,7 +90,7 @@ export default async function ThreatDetailPage({
               href={threat.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+              className="flex items-center gap-1.5 transition-colors hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
               Source
@@ -104,35 +103,33 @@ export default async function ThreatDetailPage({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Total", value: findings.length, icon: FileText },
-          { label: "Critical", value: criticalCount, color: "text-red-400" },
-          { label: "High", value: highCount, color: "text-orange-400" },
-          { label: "Medium", value: mediumCount, color: "text-yellow-400" },
+          { label: "Critical", value: criticalCount, color: "text-[#e05252]" },
+          { label: "High", value: highCount, color: "text-[#5bb8d4]" },
+          { label: "Medium", value: mediumCount, color: "text-[#d4a853]" },
         ].map((stat) => (
-          <Card key={stat.label} className="glass-card border-border/50">
-            <CardContent className="p-4 text-center">
-              <p className={`text-2xl font-bold ${stat.color || ""}`}>
-                {stat.value}
-              </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </CardContent>
-          </Card>
+          <div key={stat.label} className="rounded-[22px] border border-border p-4 text-center">
+            <p className={`display-heading text-2xl ${stat.color || ""}`}>
+              {stat.value}
+            </p>
+            <p className="text-xs text-white/50">{stat.label}</p>
+          </div>
         ))}
       </div>
 
       {/* Findings */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold">Findings</h2>
+        <h2 className="display-heading mb-4 text-xl">Findings</h2>
         <FindingsList findings={findings} />
       </div>
 
       {/* Scan history */}
       {threat.scans.length > 1 && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold">Scan History</h2>
-          <div className="glass-card overflow-hidden rounded-lg">
+          <h2 className="display-heading mb-4 text-xl">Scan History</h2>
+          <div className="overflow-hidden rounded-[22px] border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/50 text-left text-muted-foreground">
+                <tr className="border-b border-border text-left text-white/50">
                   <th className="px-4 py-2 font-medium">Date</th>
                   <th className="px-4 py-2 font-medium">Risk</th>
                   <th className="px-4 py-2 font-medium">Findings</th>
@@ -144,7 +141,7 @@ export default async function ThreatDetailPage({
                 {threat.scans.map((scan) => (
                   <tr
                     key={scan.id}
-                    className="border-b border-border/50 last:border-0"
+                    className="border-b border-border last:border-0"
                   >
                     <td className="px-4 py-2">
                       {formatDate(scan.scanDate)}

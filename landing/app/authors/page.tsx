@@ -5,9 +5,8 @@ import { getAuthors } from "@/lib/queries/authors";
 import { parsePage, paginationMeta, formatRelativeDate } from "@/lib/utils";
 import { DEFAULT_PAGE_SIZE, RISK_BG_CLASSES, type RiskLevel } from "@/lib/constants";
 import { Pagination } from "@/components/shared/pagination";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Package } from "lucide-react";
+import { Package } from "lucide-react";
 
 interface AuthorsPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -27,15 +26,12 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
   const pagination = paginationMeta(total, page, limit);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Authors</h1>
-          <p className="text-sm text-muted-foreground">
-            {total} authors across AI marketplaces
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
+      <div>
+        <h1 className="display-heading text-3xl">Authors</h1>
+        <p className="light-text mt-1 text-lg opacity-55">
+          {total} authors across AI marketplaces
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -47,18 +43,18 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
 
           return (
             <Link key={author.id} href={`/authors/${author.id}`}>
-              <Card className="glass-card border-border/50 transition-colors hover:border-primary/30">
-                <CardContent className="space-y-3 p-4">
+              <div className="rounded-[22px] border border-border p-4 transition-colors hover:border-white/20">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{author.name}</h3>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 text-xs text-white/50">
                       <Package className="h-3 w-3" />
                       {author._count.packages}
                     </span>
                   </div>
 
                   {author.marketplaceSlug && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-white/50">
                       {author.marketplaceSlug}
                     </p>
                   )}
@@ -75,18 +71,18 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
                     ))}
                   </div>
 
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/50">
                     Last seen {formatRelativeDate(author.lastSeen)}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </Link>
           );
         })}
       </div>
 
       {authors.length === 0 && (
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="py-12 text-center text-white/50">
           No authors found.
         </div>
       )}
