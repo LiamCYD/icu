@@ -1,13 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { rm } from "node:fs/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, USER_AGENT } from "../lib/config";
+import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.SkillsMP.requestsPerSecond);
 
 interface SkillsmpSkill {
@@ -68,14 +64,6 @@ async function searchSkills(query: string, page: number): Promise<SkillsmpSearch
   return (await res.json()) as SkillsmpSearchResponse;
 }
 
-async function shallowClone(repoUrl: string): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "icu-skillsmp-"));
-  await execFileAsync("git", ["clone", "--depth", "1", repoUrl, join(tmpDir, "repo")], {
-    timeout: 60_000,
-  });
-  return tmpDir;
-}
-
 export async function* skillsmpDownloader(
   maxPackages?: number,
 ): AsyncGenerator<DownloadResult> {
@@ -122,7 +110,7 @@ export async function* skillsmpDownloader(
             authorSlug: skill.author?.toLowerCase().replace(/\s+/g, "-"),
           };
 
-          tmpDir = await shallowClone(repoUrl);
+          tmpDir = await safeShallowClone(repoUrl, "skillsmp");
           yielded++;
           yield { packageInfo: pkg, extractedPath: tmpDir };
         } catch (err) {

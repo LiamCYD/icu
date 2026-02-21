@@ -1,15 +1,13 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, NPM_SEARCH_QUERIES, USER_AGENT } from "../lib/config";
+import { safeFetch, safeExtractTarball } from "../lib/safe-extract";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.npm.requestsPerSecond);
 
 interface NpmSearchResult {
@@ -56,13 +54,10 @@ async function downloadTarball(packageName: string, version: string): Promise<st
   const tarPath = join(tmpDir, "package.tgz");
 
   await limiter.acquire();
-  const tarRes = await fetch(tarballUrl, {
-    headers: { "User-Agent": USER_AGENT },
-  });
-  if (!tarRes.ok || !tarRes.body) throw new Error(`Tarball download failed: ${tarRes.status}`);
+  const tarRes = await safeFetch(tarballUrl, { "User-Agent": USER_AGENT });
   await pipeline(tarRes.body as unknown as NodeJS.ReadableStream, createWriteStream(tarPath));
 
-  await execFileAsync("tar", ["xzf", tarPath, "-C", tmpDir]);
+  await safeExtractTarball(tarPath, tmpDir);
   return tmpDir;
 }
 

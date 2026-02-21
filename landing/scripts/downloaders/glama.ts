@@ -1,13 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { rm } from "node:fs/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, GLAMA_CURATED_REPOS, USER_AGENT } from "../lib/config";
+import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.Glama.requestsPerSecond);
 
 interface GlamaServer {
@@ -28,7 +24,6 @@ async function fetchServerList(): Promise<GlamaServer[]> {
   if (!res.ok) throw new Error(`Glama listing failed: ${res.status}`);
   const html = await res.text();
 
-  // Extract server links from HTML: /mcp/servers/{author}/{name}
   const pattern = /\/mcp\/servers\/([^/"]+)\/([^/"]+)/g;
   const servers: GlamaServer[] = [];
   const seen = new Set<string>();
@@ -46,19 +41,11 @@ async function fetchServerList(): Promise<GlamaServer[]> {
 
 async function fetchServerMetadata(author: string, name: string): Promise<GlamaServer> {
   await limiter.acquire();
-  const res = await fetch(`https://glama.ai/api/mcp/v1/servers/${author}/${name}`, {
+  const res = await fetch(`https://glama.ai/api/mcp/v1/servers/${encodeURIComponent(author)}/${encodeURIComponent(name)}`, {
     headers: { "User-Agent": USER_AGENT },
   });
   if (!res.ok) throw new Error(`Glama metadata failed: ${res.status}`);
   return (await res.json()) as GlamaServer;
-}
-
-async function shallowClone(repoUrl: string): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "icu-glama-"));
-  await execFileAsync("git", ["clone", "--depth", "1", repoUrl, join(tmpDir, "repo")], {
-    timeout: 60_000,
-  });
-  return tmpDir;
 }
 
 function curatedToPackages(): PackageInfo[] {
@@ -91,7 +78,7 @@ export async function* glamaDownloader(
       if (yielded >= cap) break;
       let tmpDir: string | undefined;
       try {
-        tmpDir = await shallowClone(pkg.sourceUrl!);
+        tmpDir = await safeShallowClone(pkg.sourceUrl!, "glama");
         yielded++;
         yield { packageInfo: pkg, extractedPath: tmpDir };
       } catch (cloneErr) {
@@ -119,7 +106,7 @@ export async function* glamaDownloader(
         authorSlug: server.author.toLowerCase(),
       };
 
-      tmpDir = await shallowClone(repoUrl);
+      tmpDir = await safeShallowClone(repoUrl, "glama");
       yielded++;
       yield { packageInfo: pkg, extractedPath: tmpDir };
     } catch (err) {

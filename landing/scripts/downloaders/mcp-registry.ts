@@ -1,13 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { rm } from "node:fs/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, USER_AGENT } from "../lib/config";
+import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS["MCP Registry"].requestsPerSecond);
 
 interface McpRegistryServer {
@@ -21,11 +17,6 @@ interface McpRegistryServer {
       source?: string;
       subfolder?: string;
     };
-    packages?: Array<{
-      registryType: string;
-      identifier: string;
-      version?: string;
-    }>;
   };
   _meta?: Record<string, unknown>;
 }
@@ -52,25 +43,13 @@ async function fetchPage(cursor?: string): Promise<McpRegistryResponse> {
 }
 
 function extractAuthor(name: string): string | undefined {
-  // Names are reverse-DNS: "io.github.user/server-name"
   const parts = name.split("/");
   if (parts.length >= 2) {
     const domain = parts[0];
     const segments = domain.split(".");
-    return segments[segments.length - 1]; // last segment is usually the username
+    return segments[segments.length - 1];
   }
   return undefined;
-}
-
-async function shallowClone(repoUrl: string, subfolder?: string): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "icu-mcpreg-"));
-  const cloneTarget = join(tmpDir, "repo");
-  await execFileAsync("git", ["clone", "--depth", "1", repoUrl, cloneTarget], {
-    timeout: 60_000,
-  });
-  // If there's a subfolder, the scan path should still be the clone root
-  // so the scanner can see all files
-  return tmpDir;
 }
 
 export async function* mcpRegistryDownloader(
@@ -95,7 +74,7 @@ export async function* mcpRegistryDownloader(
       if (yielded >= cap) break;
 
       const repoUrl = entry.server.repository?.url;
-      if (!repoUrl) continue; // Skip servers without source repos
+      if (!repoUrl) continue;
 
       let tmpDir: string | undefined;
       try {
@@ -109,7 +88,7 @@ export async function* mcpRegistryDownloader(
           authorSlug: author?.toLowerCase(),
         };
 
-        tmpDir = await shallowClone(repoUrl, entry.server.repository?.subfolder);
+        tmpDir = await safeShallowClone(repoUrl, "mcpreg");
         yielded++;
         yield { packageInfo: pkg, extractedPath: tmpDir };
       } catch (err) {

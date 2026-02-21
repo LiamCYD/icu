@@ -85,7 +85,7 @@ export default async function ThreatDetailPage({
               {threat.sha256.slice(0, 16)}...
             </span>
           )}
-          {threat.sourceUrl && (
+          {threat.sourceUrl && threat.sourceUrl.startsWith("https://") && (
             <a
               href={threat.sourceUrl}
               target="_blank"

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     marketplace: sp.get("marketplace") || undefined,
     q: sp.get("q") || undefined,
     sort: sp.get("sort") || undefined,
-    order: (sp.get("order") as "asc" | "desc") || undefined,
+    order: sp.get("order") === "asc" || sp.get("order") === "desc" ? sp.get("order") as "asc" | "desc" : undefined,
   });
 
   return NextResponse.json({

@@ -1,13 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { rm } from "node:fs/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, USER_AGENT } from "../lib/config";
+import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.Smithery.requestsPerSecond);
 
 interface SmitheryServer {
@@ -40,19 +36,10 @@ async function fetchPage(page: number): Promise<SmitheryPage> {
 
 function extractGithubUrl(server: SmitheryServer): string | undefined {
   if (server.repository) return server.repository;
-  // qualifiedName is often "owner/repo"
   if (server.qualifiedName.includes("/")) {
     return `https://github.com/${server.qualifiedName}`;
   }
   return undefined;
-}
-
-async function shallowClone(repoUrl: string): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "icu-smithery-"));
-  await execFileAsync("git", ["clone", "--depth", "1", repoUrl, join(tmpDir, "repo")], {
-    timeout: 60_000,
-  });
-  return tmpDir;
 }
 
 export async function* smitheryDownloader(
@@ -94,7 +81,7 @@ export async function* smitheryDownloader(
           authorSlug: (server.vendor || parts[0])?.toLowerCase(),
         };
 
-        tmpDir = await shallowClone(repoUrl);
+        tmpDir = await safeShallowClone(repoUrl, "smithery");
         yielded++;
         yield { packageInfo: pkg, extractedPath: tmpDir };
       } catch (err) {

@@ -1,13 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { rm } from "node:fs/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, USER_AGENT } from "../lib/config";
+import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.PulseMCP.requestsPerSecond);
 
 interface PulseMcpServer {
@@ -62,14 +58,6 @@ function extractAuthor(name: string): string | undefined {
   return undefined;
 }
 
-async function shallowClone(repoUrl: string): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "icu-pulsemcp-"));
-  await execFileAsync("git", ["clone", "--depth", "1", repoUrl, join(tmpDir, "repo")], {
-    timeout: 60_000,
-  });
-  return tmpDir;
-}
-
 export async function* pulsemcpDownloader(
   maxPackages?: number,
 ): AsyncGenerator<DownloadResult> {
@@ -112,7 +100,7 @@ export async function* pulsemcpDownloader(
           authorSlug: author?.toLowerCase(),
         };
 
-        tmpDir = await shallowClone(repoUrl);
+        tmpDir = await safeShallowClone(repoUrl, "pulsemcp");
         yielded++;
         yield { packageInfo: pkg, extractedPath: tmpDir };
       } catch (err) {

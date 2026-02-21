@@ -1,15 +1,13 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import { RateLimiter } from "../lib/rate-limiter";
 import { RATE_LIMITS, PYPI_PACKAGES, USER_AGENT } from "../lib/config";
+import { safeFetch, safeExtractTarball } from "../lib/safe-extract";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
-const execFileAsync = promisify(execFile);
 const limiter = new RateLimiter(RATE_LIMITS.PyPI.requestsPerSecond);
 
 interface PyPIMetadata {
@@ -44,14 +42,10 @@ async function downloadSdist(meta: PyPIMetadata): Promise<string> {
   const tmpDir = await mkdtemp(join(tmpdir(), "icu-pypi-"));
   const tarPath = join(tmpDir, sdist.filename);
 
-  await limiter.acquire();
-  const res = await fetch(sdist.url, {
-    headers: { "User-Agent": USER_AGENT },
-  });
-  if (!res.ok || !res.body) throw new Error(`Sdist download failed: ${res.status}`);
+  const res = await safeFetch(sdist.url, { "User-Agent": USER_AGENT });
   await pipeline(res.body as unknown as NodeJS.ReadableStream, createWriteStream(tarPath));
 
-  await execFileAsync("tar", ["xzf", tarPath, "-C", tmpDir]);
+  await safeExtractTarball(tarPath, tmpDir);
   return tmpDir;
 }
 
