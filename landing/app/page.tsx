@@ -1,117 +1,171 @@
-const GITHUB_REPO = "https://github.com/your-org/i-see-u";
+export const dynamic = "force-dynamic";
 
-function GitHubIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path
-        fillRule="evenodd"
-        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ParticleEye } from "@/components/hero/particle-eye";
+import { StatCards } from "@/components/dashboard/stat-cards";
+import { DetectionChart } from "@/components/dashboard/detection-chart";
+import { CategoryChart } from "@/components/dashboard/category-chart";
+import { RecentThreats } from "@/components/dashboard/recent-threats";
+import { getDashboardStats, getMarketplaceStats } from "@/lib/queries/stats";
+import { getRecentThreats } from "@/lib/queries/threats";
 
-export default function Home() {
+
+export default async function DashboardPage() {
+  const [stats, marketplaceStats, recentThreats] = await Promise.all([
+    getDashboardStats(),
+    getMarketplaceStats(),
+    getRecentThreats(10),
+  ]);
+
+  const categoryData = {
+    prompt_injection: stats.promptInjection,
+    data_exfiltration: stats.dataExfiltration,
+    obfuscation: stats.obfuscation,
+    suspicious_commands: stats.suspiciousCommands,
+    network_suspicious: stats.networkSuspicious,
+  };
+
   return (
-    <div className="page">
-      <div className="container">
-        <header className="hero">
-          <h1>I See You</h1>
-          <p className="tagline">
-            AI supply chain firewall — scan files for prompt injection, data
-            exfiltration, and obfuscated payloads.
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="relative flex min-h-[830px] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center" style={{ background: "#172322" }}>
+        <ParticleEye />
+        <div className="relative z-10 flex flex-col items-center gap-6">
+          <h1 className="display-heading text-6xl sm:text-8xl lg:text-[131px] lg:leading-none">
+            I See You
+          </h1>
+          <p className="light-text max-w-[1076px] text-xl sm:text-2xl lg:text-[40px] lg:leading-snug">
+            Scanning AI marketplaces for malicious packages. Prompt injection,
+            data exfiltration, and obfuscation — detected and exposed.
           </p>
-          <p className="sub">Install it. Forget it. It sees everything.</p>
-
-          <div className="cta">
-            <a
-              href={GITHUB_REPO}
-              className="btn btn-primary"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <GitHubIcon />
-              View on GitHub
-            </a>
-            <a
-              href={`${GITHUB_REPO}#readme`}
-              className="btn btn-glass"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Get started
-            </a>
-            <a
-              href={`${GITHUB_REPO}/releases`}
-              className="btn btn-glass"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Releases
-            </a>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Button variant="icu" size="lg" className="px-12 py-6 text-xl" asChild>
+              <a href="https://github.com/LiamCYD/icu" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </Button>
+            <Button variant="icu" size="lg" className="px-12 py-6 text-xl" asChild>
+              <Link href="/about">
+                About ICU
+              </Link>
+            </Button>
           </div>
-        </header>
+        </div>
+      </section>
 
-        <section className="readme-section" aria-label="About and how to use">
-          <div className="readme-head">About I See You</div>
-          <div className="readme-body">
-            <h2>What is this?</h2>
-            <p>
-              I See You (<code>icu</code>) is an open-source AI supply chain
-              firewall and runtime guardian. It protects developers using AI
-              coding tools (Claude Code, Cursor, Copilot, custom agents) from
-              malicious MCP servers, skill files, agent plugins, prompt injection
-              attacks, and data exfiltration — with near-zero perceptible
-              latency when things are safe.
-            </p>
-            <p>
-              It is designed to be{" "}
-              <strong>invisible when things are safe</strong> and{" "}
-              <strong>unmistakable when they&apos;re not</strong>.
-            </p>
+      {/* Content Section */}
+      <section className="mx-auto w-full max-w-[1600px] space-y-8 px-6 py-12 md:px-20">
+        {/* Stat Cards */}
+        <StatCards
+          totalCritical={stats.totalCritical}
+          totalFindings={stats.totalFindings}
+          totalPackages={stats.totalPackages}
+          marketplaceCount={marketplaceStats.length}
+        />
 
-            <h2>How to get access</h2>
-            <p>
-              The project is open source (Apache 2.0). Clone or download the
-              repository from GitHub. You can also install from source for the
-              latest development version.
-            </p>
-            <ul>
-              <li>
-                <strong>GitHub repo:</strong> Use the &ldquo;View on
-                GitHub&rdquo; or &ldquo;Get started&rdquo; button above to open
-                the repository.
-              </li>
-              <li>
-                <strong>Releases:</strong> Check the &ldquo;Releases&rdquo; page
-                for stable versions and release notes.
-              </li>
-            </ul>
+        {/* Charts row */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DetectionChart data={stats.dailyTrend} />
+          <CategoryChart data={categoryData} />
+        </div>
 
-            <h2>How to use it</h2>
-            <p>
-              Install from the project directory (recommended for latest code):
+        {/* Recent threats table */}
+        <RecentThreats threats={recentThreats} />
+
+        {/* Marketplace safety scores */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Risk bar distribution */}
+          <div className="rounded-[22px] border border-border p-6">
+            <p className="light-text mb-4 text-lg">
+              Risk Distribution
             </p>
-            <pre>
-              <code>pip install -e &quot;.[dev]&quot;</code>
-            </pre>
-            <p>Scan a file or directory from the command line:</p>
-            <pre>
-              <code>icu scan ./path/to/file</code>
-            </pre>
-            <p>
-              You can run <code>icu</code> on individual files, folders, or
-              integrate it into your CI. For more options and configuration,
-              see the README and documentation in the GitHub repository.
-            </p>
+            <div className="space-y-3">
+              {([
+                { label: "Critical", value: stats.totalCritical, color: "bg-[#e05252]" },
+                { label: "High", value: stats.totalHigh, color: "bg-[#5bb8d4]" },
+                { label: "Medium", value: stats.totalMedium, color: "bg-[#d4a853]" },
+                { label: "Low", value: stats.totalLow, color: "bg-[#6b8a7a]" },
+                { label: "Clean", value: stats.totalClean, color: "bg-[#3a8a8c]" },
+              ] as const).map((item) => {
+                const pct =
+                  stats.totalPackages > 0
+                    ? (item.value / stats.totalPackages) * 100
+                    : 0;
+                return (
+                  <div key={item.label} className="flex items-center gap-3">
+                    <span className="w-16 text-xs text-white/50">
+                      {item.label}
+                    </span>
+                    <div className="flex-1 overflow-hidden rounded-full bg-border/30 h-2">
+                      <div
+                        className={`h-full rounded-full ${item.color}`}
+                        style={{ width: `${Math.max(pct, 2)}%` }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-xs text-white/50">
+                      {item.value}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </section>
-      </div>
+
+          {/* Marketplace safety scores */}
+          <div className="rounded-[22px] border border-border p-6">
+            <p className="light-text mb-4 text-lg">
+              Marketplace Safety Scores
+            </p>
+            <div className="space-y-3">
+              {marketplaceStats.map((mp) => (
+                <div key={mp.id} className="flex items-center gap-3">
+                  <span className="w-24 truncate text-sm">{mp.name}</span>
+                  <div className="flex-1 overflow-hidden rounded-full bg-border/30 h-2">
+                    <div
+                      className={`h-full rounded-full ${
+                        mp.safetyScore >= 80
+                          ? "bg-[#3a8a8c]"
+                          : mp.safetyScore >= 50
+                            ? "bg-[#d4a853]"
+                            : "bg-[#e05252]"
+                      }`}
+                      style={{ width: `${mp.safetyScore}%` }}
+                    />
+                  </div>
+                  <span className="w-10 text-right text-xs text-white/50">
+                    {mp.safetyScore}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section — "We all see you" */}
+      <section className="relative flex min-h-[830px] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
+        {/* Background video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/BG vid.mp4" type="video/mp4" />
+        </video>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-[#0d1b20]/60" />
+        <div className="relative z-10 flex flex-col items-center gap-3">
+          <h2 className="display-heading text-6xl sm:text-8xl lg:text-[131px] lg:leading-none">
+            We all see you
+          </h2>
+          <p className="light-text text-xl sm:text-2xl lg:text-[40px]">
+            Community driven
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

@@ -2,3 +2,7 @@ node_modules/
 .next/
 out/
 *.tsbuildinfo
+.env
+.env.local
+/lib/generated/prisma
+.vercel

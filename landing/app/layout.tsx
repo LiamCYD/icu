@@ -1,16 +1,30 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
 export const metadata: Metadata = {
-  title: "I See You — AI supply chain firewall",
+  title: "ICU — AI Supply Chain Threat Intelligence",
   description:
-    "AI supply chain firewall — scan files for prompt injection, data exfiltration, and obfuscated payloads.",
+    "Real-time scanning of AI marketplaces for malicious packages. Prompt injection, data exfiltration, and obfuscation detection.",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  metadataBase: new URL("https://icu-cli.com"),
+  openGraph: {
+    title: "ICU — AI Supply Chain Threat Intelligence",
+    description:
+      "Real-time scanning of AI marketplaces for malicious packages. Prompt injection, data exfiltration, and obfuscation — detected and exposed.",
+    type: "website",
+    siteName: "ICU",
+    url: "https://icu-cli.com",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ICU — AI Supply Chain Threat Intelligence",
+    description:
+      "Scanning AI marketplaces for malicious packages. Prompt injection, data exfiltration, and obfuscation — detected and exposed.",
+  },
 };
 
 export default function RootLayout({
@@ -19,8 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={inter.className}>{children}</body>
+    <html lang="en">
+      <body className="page-bg min-h-screen">
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
     </html>
   );
 }
