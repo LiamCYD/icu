@@ -21,6 +21,21 @@ export const MARKETPLACES: Record<MarketplaceName, MarketplaceDef> = {
     url: "https://glama.ai",
     description: "MCP server directory",
   },
+  "MCP Registry": {
+    name: "MCP Registry",
+    url: "https://registry.modelcontextprotocol.io",
+    description: "Official MCP server registry",
+  },
+  SkillsMP: {
+    name: "SkillsMP",
+    url: "https://skillsmp.com",
+    description: "Agent skills marketplace",
+  },
+  PulseMCP: {
+    name: "PulseMCP",
+    url: "https://www.pulsemcp.com",
+    description: "MCP server directory with enriched metadata",
+  },
 };
 
 export const NPM_SEARCH_QUERIES = [
@@ -150,6 +165,9 @@ export const RATE_LIMITS: Record<MarketplaceName, { requestsPerSecond: number; m
   PyPI: { requestsPerSecond: 10, maxPackages: 100 },
   Smithery: { requestsPerSecond: 5, maxPackages: 150 },
   Glama: { requestsPerSecond: 3, maxPackages: 100 },
+  "MCP Registry": { requestsPerSecond: 10, maxPackages: 500 },
+  SkillsMP: { requestsPerSecond: 5, maxPackages: 200 },
+  PulseMCP: { requestsPerSecond: 3, maxPackages: 300 },
 };
 
 export const SCANNER_TIMEOUT_MS = 120_000;

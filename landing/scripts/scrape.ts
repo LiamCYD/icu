@@ -16,6 +16,9 @@ import { npmDownloader } from "./downloaders/npm";
 import { pypiDownloader } from "./downloaders/pypi";
 import { smitheryDownloader } from "./downloaders/smithery";
 import { glamaDownloader } from "./downloaders/glama";
+import { mcpRegistryDownloader } from "./downloaders/mcp-registry";
+import { skillsmpDownloader } from "./downloaders/skillsmp";
+import { pulsemcpDownloader } from "./downloaders/pulsemcp";
 import type { MarketplaceName, DownloadResult, ScrapeResult } from "./lib/types";
 
 function createPrisma(): PrismaClient {
@@ -36,6 +39,12 @@ function getDownloader(name: MarketplaceName, max?: number): AsyncGenerator<Down
       return smitheryDownloader(max);
     case "Glama":
       return glamaDownloader(max);
+    case "MCP Registry":
+      return mcpRegistryDownloader(max);
+    case "SkillsMP":
+      return skillsmpDownloader(max);
+    case "PulseMCP":
+      return pulsemcpDownloader(max);
   }
 }
 

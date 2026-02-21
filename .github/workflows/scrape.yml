@@ -15,6 +15,9 @@ on:
           - PyPI
           - Smithery
           - Glama
+          - MCP Registry
+          - SkillsMP
+          - PulseMCP
       max_packages:
         description: "Max packages per marketplace"
         required: false
@@ -59,6 +62,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SMITHERY_API_TOKEN: ${{ secrets.SMITHERY_API_TOKEN }}
+          SKILLSMP_API_KEY: ${{ secrets.SKILLSMP_API_KEY }}
+          PULSEMCP_API_KEY: ${{ secrets.PULSEMCP_API_KEY }}
+          PULSEMCP_TENANT_ID: ${{ secrets.PULSEMCP_TENANT_ID }}
           MARKETPLACE: ${{ inputs.marketplace }}
           MAX_PACKAGES: ${{ inputs.max_packages }}
         run: npx tsx scripts/scrape.ts 2>&1 | tee scrape.log
