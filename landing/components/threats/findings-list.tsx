@@ -40,7 +40,7 @@ export function FindingsList({ findings }: FindingsListProps) {
       {Array.from(byFile.entries()).map(([filePath, fileFindings]) => (
         <div key={filePath} className="overflow-hidden rounded-[22px] border border-border">
           <div className="border-b border-border px-4 py-2">
-            <code className="text-sm text-white/50">{filePath}</code>
+            <code className="text-sm text-white/50 break-all">{filePath}</code>
           </div>
           <div className="divide-y divide-border">
             {fileFindings.map((f) => (

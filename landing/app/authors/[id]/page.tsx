@@ -99,7 +99,7 @@ export default async function AuthorDetailPage({
       {/* Packages table */}
       <div>
         <h2 className="display-heading mb-4 text-xl">Packages</h2>
-        <div className="overflow-hidden rounded-[22px] border border-border">
+        <div className="overflow-x-auto rounded-[22px] border border-border">
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">

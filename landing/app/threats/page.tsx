@@ -47,7 +47,7 @@ export default async function ThreatsPage({ searchParams }: ThreatsPageProps) {
         <ThreatFilters marketplaces={marketplaces.map((m) => m.name)} />
       </Suspense>
 
-      <div className="overflow-hidden rounded-[22px] border border-border">
+      <div className="overflow-x-auto rounded-[22px] border border-border">
         <ThreatsTable threats={packages} />
       </div>
 

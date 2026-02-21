@@ -24,13 +24,13 @@ export function StatCards(props: StatCardsProps) {
         return (
           <div
             key={stat.key}
-            className="flex h-[176px] items-center gap-8 overflow-hidden rounded-[22px] border border-border px-8"
+            className="flex h-auto flex-col items-start gap-3 overflow-hidden rounded-[22px] border border-border px-4 py-4 sm:h-[176px] sm:flex-row sm:items-center sm:gap-8 sm:px-8 sm:py-0"
           >
             <div className={`shrink-0 rounded-lg p-2.5 ${stat.bg}`}>
               <Icon className={`h-6 w-6 ${stat.color}`} />
             </div>
             <div className="flex flex-col gap-2">
-              <span className="display-heading text-6xl leading-none lg:text-7xl">
+              <span className="display-heading text-3xl leading-none sm:text-5xl lg:text-7xl">
                 {formatNumber(value)}
               </span>
               <span className="light-text text-lg">

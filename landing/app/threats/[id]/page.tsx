@@ -126,15 +126,15 @@ export default async function ThreatDetailPage({
       {threat.scans.length > 1 && (
         <div>
           <h2 className="display-heading mb-4 text-xl">Scan History</h2>
-          <div className="overflow-hidden rounded-[22px] border border-border">
+          <div className="overflow-x-auto rounded-[22px] border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-white/50">
                   <th className="px-4 py-2 font-medium">Date</th>
                   <th className="px-4 py-2 font-medium">Risk</th>
                   <th className="px-4 py-2 font-medium">Findings</th>
-                  <th className="px-4 py-2 font-medium">Files</th>
-                  <th className="px-4 py-2 font-medium">Duration</th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">Files</th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">Duration</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,8 +150,8 @@ export default async function ThreatDetailPage({
                       <RiskBadge level={scan.riskLevel} />
                     </td>
                     <td className="px-4 py-2">{scan.findings.length}</td>
-                    <td className="px-4 py-2">{scan.filesScanned}</td>
-                    <td className="px-4 py-2">
+                    <td className="hidden px-4 py-2 sm:table-cell">{scan.filesScanned}</td>
+                    <td className="hidden px-4 py-2 sm:table-cell">
                       {scan.scanDuration.toFixed(2)}s
                     </td>
                   </tr>

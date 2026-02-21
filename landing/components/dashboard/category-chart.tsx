@@ -23,7 +23,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
   }));
 
   return (
-    <div className="rounded-[22px] border border-border px-8 py-4">
+    <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
       <p className="light-text mb-6 text-lg">
         Findings by Category
       </p>
@@ -48,7 +48,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
               tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
-              width={120}
+              width={90}
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
               {chartData.map((entry, index) => (

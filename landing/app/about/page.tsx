@@ -122,7 +122,7 @@ export default function AboutPage() {
       </div>
 
       {/* Detection rules */}
-      <div className="overflow-hidden rounded-[22px] border border-border">
+      <div className="overflow-x-auto rounded-[22px] border border-border">
         <div className="px-6 py-4">
           <h2 className="display-heading text-xl">Detection Rules ({DETECTION_RULES.length})</h2>
         </div>

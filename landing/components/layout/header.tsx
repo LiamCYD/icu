@@ -30,13 +30,13 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-12 md:flex">
+        <nav className="hidden items-center gap-4 md:flex lg:gap-8 xl:gap-12">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "text-xl transition-colors",
+                "text-base transition-colors lg:text-xl",
                 pathname === link.href
                   ? "text-white"
                   : "text-white/70 hover:text-white"
@@ -53,7 +53,7 @@ export function Header() {
           href={GITHUB_REPO}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden text-xl text-white/70 transition-colors hover:text-white md:block"
+          className="hidden text-base text-white/70 transition-colors hover:text-white md:block lg:text-xl"
           style={{ fontFamily: "var(--font-body)" }}
         >
           GitHub

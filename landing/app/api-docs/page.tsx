@@ -116,7 +116,7 @@ export default function ApiDocsPage() {
                     {endpoint.params.map((param) => (
                       <div
                         key={param.name}
-                        className="flex items-start gap-3 text-sm"
+                        className="flex flex-col gap-1 text-sm sm:flex-row sm:items-start sm:gap-3"
                       >
                         <code className="shrink-0 rounded bg-border/30 px-1.5 py-0.5 text-xs text-white">
                           {param.name}

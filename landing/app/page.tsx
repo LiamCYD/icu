@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative flex min-h-[830px] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center" style={{ background: "#172322" }}>
+      <section className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[830px]" style={{ background: "#172322" }}>
         <ParticleEye />
         <div className="relative z-10 flex flex-col items-center gap-6">
           <h1 className="display-heading text-6xl sm:text-8xl lg:text-[131px] lg:leading-none">
@@ -40,12 +40,12 @@ export default async function DashboardPage() {
             data exfiltration, and obfuscation — detected and exposed.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Button variant="icu" size="lg" className="px-12 py-6 text-xl" asChild>
+            <Button variant="icu" size="lg" className="px-6 py-3 text-base sm:px-12 sm:py-6 sm:text-xl" asChild>
               <a href="https://github.com/LiamCYD/icu" target="_blank" rel="noopener noreferrer">
                 GitHub
               </a>
             </Button>
-            <Button variant="icu" size="lg" className="px-12 py-6 text-xl" asChild>
+            <Button variant="icu" size="lg" className="px-6 py-3 text-base sm:px-12 sm:py-6 sm:text-xl" asChild>
               <Link href="/about">
                 About ICU
               </Link>
@@ -144,7 +144,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* CTA Section — "We all see you" */}
-      <section className="relative flex min-h-[830px] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
+      <section className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[830px]">
         {/* Background video */}
         <video
           autoPlay

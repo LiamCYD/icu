@@ -16,7 +16,7 @@ interface DetectionChartProps {
 
 export function DetectionChart({ data }: DetectionChartProps) {
   return (
-    <div className="rounded-[22px] border border-border px-8 py-4">
+    <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
       <p className="light-text mb-6 text-lg">
         Detection over time (30 days)
       </p>

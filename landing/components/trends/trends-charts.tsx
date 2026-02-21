@@ -66,7 +66,7 @@ export function TrendsCharts({
   return (
     <div className="space-y-6">
       {/* Detection timeline */}
-      <div className="rounded-[22px] border border-border px-8 py-4">
+      <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
         <p className="light-text mb-6 text-lg">
           Detection Timeline (30 days)
         </p>
@@ -114,7 +114,7 @@ export function TrendsCharts({
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Risk distribution pie */}
-        <div className="rounded-[22px] border border-border px-8 py-4">
+        <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
           <p className="light-text mb-6 text-lg">
             Risk Distribution
           </p>
@@ -144,7 +144,7 @@ export function TrendsCharts({
         </div>
 
         {/* Category breakdown */}
-        <div className="rounded-[22px] border border-border px-8 py-4">
+        <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
           <p className="light-text mb-6 text-lg">
             Findings by Category
           </p>
@@ -169,7 +169,7 @@ export function TrendsCharts({
                   tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
-                  width={130}
+                  width={90}
                 />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -184,7 +184,7 @@ export function TrendsCharts({
       </div>
 
       {/* Marketplace comparison */}
-      <div className="rounded-[22px] border border-border px-8 py-4">
+      <div className="rounded-[22px] border border-border px-4 py-4 sm:px-8">
         <p className="light-text mb-6 text-lg">
           Packages by Marketplace
         </p>

@@ -57,7 +57,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("risk") || "all"}
         onValueChange={(v) => updateParam("risk", v)}
       >
-        <SelectTrigger className="w-[140px] bg-transparent border-border">
+        <SelectTrigger className="w-full bg-transparent border-border sm:w-[140px]">
           <SelectValue placeholder="Risk level" />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +74,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("category") || "all"}
         onValueChange={(v) => updateParam("category", v)}
       >
-        <SelectTrigger className="w-[180px] bg-transparent border-border">
+        <SelectTrigger className="w-full bg-transparent border-border sm:w-[180px]">
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -91,7 +91,7 @@ export function ThreatFilters({ marketplaces }: ThreatFiltersProps) {
         defaultValue={searchParams.get("marketplace") || "all"}
         onValueChange={(v) => updateParam("marketplace", v)}
       >
-        <SelectTrigger className="w-[140px] bg-transparent border-border">
+        <SelectTrigger className="w-full bg-transparent border-border sm:w-[140px]">
           <SelectValue placeholder="Marketplace" />
         </SelectTrigger>
         <SelectContent>

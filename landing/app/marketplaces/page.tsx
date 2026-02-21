@@ -28,7 +28,7 @@ export default async function MarketplacesPage() {
             .sort((a, b) => b.safetyScore - a.safetyScore)
             .map((mp) => (
               <div key={mp.id} className="flex items-center gap-4">
-                <span className="w-24 text-sm font-medium">{mp.name}</span>
+                <span className="w-24 truncate text-sm font-medium">{mp.name}</span>
                 <div className="flex-1 overflow-hidden rounded-full bg-border/30 h-3">
                   <div
                     className={`h-full rounded-full transition-all ${

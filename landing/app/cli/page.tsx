@@ -257,7 +257,7 @@ export default function CliPage() {
                   <h4 className="mb-2 text-xs font-medium uppercase text-white/40">Options</h4>
                   <div className="space-y-2">
                     {cmd.flags.map((f) => (
-                      <div key={f.flag} className="flex items-start gap-3 text-sm">
+                      <div key={f.flag} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-start sm:gap-3">
                         <code className="shrink-0 rounded bg-border/30 px-1.5 py-0.5 text-xs text-white">
                           {f.flag}
                         </code>
