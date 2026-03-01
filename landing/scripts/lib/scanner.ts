@@ -21,9 +21,13 @@ export async function runIcuScan(targetPath: string): Promise<IcuScanOutput> {
         }
 
         try {
-          // Sanitize invalid Unicode escape sequences before parsing
-          const sanitized = stdout.replace(/\\u(?![0-9a-fA-F]{4})/g, "\\\\u");
-          const output = JSON.parse(sanitized) as IcuScanOutput;
+          // Strip lone Unicode surrogates (\uD800-\uDFFF) that Python may emit
+          // from files containing invalid UTF-8. JSON.parse rejects these.
+          const cleaned = stdout.replace(
+            /\\u[dD][89a-bA-B][0-9a-fA-F]{2}(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
+            "\\ufffd",
+          );
+          const output = JSON.parse(cleaned) as IcuScanOutput;
           resolve(output);
         } catch {
           // Exit code might be non-zero for findings but output should still be valid JSON
