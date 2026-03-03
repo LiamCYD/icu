@@ -21,6 +21,26 @@ import { skillsmpDownloader } from "./downloaders/skillsmp";
 import { pulsemcpDownloader } from "./downloaders/pulsemcp";
 import type { MarketplaceName, DownloadResult, ScrapeResult } from "./lib/types";
 
+/** Strip lone Unicode surrogates from strings — PostgreSQL rejects them in JSON columns. */
+function stripSurrogates(str: string): string {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/[\uD800-\uDFFF]/g, "\uFFFD");
+}
+
+/** Deep-strip surrogates from all strings in an object (for Prisma JSON columns). */
+function sanitizeForJson(obj: unknown): unknown {
+  if (typeof obj === "string") return stripSurrogates(obj);
+  if (Array.isArray(obj)) return obj.map(sanitizeForJson);
+  if (obj !== null && typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = sanitizeForJson(v);
+    }
+    return result;
+  }
+  return obj;
+}
+
 function createPrisma(): PrismaClient {
   const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! });
   return new PrismaClient({ adapter });
@@ -148,7 +168,7 @@ async function processPackage(
         scanDuration: scanOutput.summary.scan_duration,
         filesScanned: scanOutput.summary.total_files,
         riskLevel: overallRisk,
-        rawOutput: JSON.parse(JSON.stringify(scanOutput)),
+        rawOutput: JSON.parse(JSON.stringify(sanitizeForJson(scanOutput))),
       },
     });
 
@@ -166,11 +186,11 @@ async function processPackage(
             ruleId: finding.rule_id,
             category: categoryFromRuleId(finding.rule_id),
             severity: normalizeSeverity(finding.severity),
-            description: finding.description || "",
+            description: stripSurrogates(finding.description || ""),
             filePath,
             lineNumber: finding.line ?? 0,
-            matchedText: (finding.matched_text ?? "").slice(0, 500),
-            context: finding.context || "",
+            matchedText: stripSurrogates((finding.matched_text ?? "").slice(0, 500)),
+            context: stripSurrogates(finding.context || ""),
             confidence: score,
             disclaimer,
           },

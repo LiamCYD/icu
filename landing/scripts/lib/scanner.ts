@@ -21,10 +21,11 @@ export async function runIcuScan(targetPath: string): Promise<IcuScanOutput> {
         }
 
         try {
-          // Strip lone Unicode surrogates (\uD800-\uDFFF) that Python may emit
-          // from files containing invalid UTF-8. JSON.parse rejects these.
+          // Strip ALL Unicode surrogates (\uD800-\uDFFF) that Python may emit
+          // from files containing invalid UTF-8. PostgreSQL rejects these in
+          // JSON columns even though Node.js JSON.parse accepts them.
           const cleaned = stdout.replace(
-            /\\u[dD][89a-bA-B][0-9a-fA-F]{2}(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
+            /\\u[dD][89a-fA-F][0-9a-fA-F]{2}/g,
             "\\ufffd",
           );
           const output = JSON.parse(cleaned) as IcuScanOutput;
