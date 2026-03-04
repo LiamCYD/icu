@@ -173,3 +173,9 @@ export const RATE_LIMITS: Record<MarketplaceName, { requestsPerSecond: number; m
 export const SCANNER_TIMEOUT_MS = 120_000;
 export const SCAN_STALENESS_HOURS = 24;
 export const USER_AGENT = "i-see-u-scanner/0.1.0 (https://github.com/LiamCYD/icu)";
+
+/** Max findings stored per scan — packages with 3k+ findings waste time on DB inserts. */
+export const MAX_FINDINGS_PER_SCAN = 200;
+
+/** Time budget per marketplace in ms (7 min each × 7 = 49 min, leaving headroom for setup/stats). */
+export const MARKETPLACE_TIMEOUT_MS = 7 * 60 * 1000;

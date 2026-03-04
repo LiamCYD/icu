@@ -7,7 +7,7 @@ import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 
 neonConfig.webSocketConstructor = ws;
-import { MARKETPLACES, SCAN_STALENESS_HOURS } from "./lib/config";
+import { MARKETPLACES, SCAN_STALENESS_HOURS, MAX_FINDINGS_PER_SCAN, MARKETPLACE_TIMEOUT_MS } from "./lib/config";
 import { runIcuScan } from "./lib/scanner";
 import { categoryFromRuleId, normalizeSeverity, worstRisk } from "./lib/rule-category-map";
 import { scoreConfidence } from "./lib/confidence";
@@ -172,32 +172,50 @@ async function processPackage(
       },
     });
 
-    // Create findings
-    let findingsCount = 0;
+    // Collect findings (capped to avoid multi-thousand insert storms)
+    const findingRows: {
+      scanId: string;
+      ruleId: string;
+      category: string;
+      severity: string;
+      description: string;
+      filePath: string;
+      lineNumber: number;
+      matchedText: string;
+      context: string;
+      confidence: number | null;
+      disclaimer: string | null;
+    }[] = [];
+
     for (const fileResult of scanOutput.results) {
+      if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
       const filePath = fileResult.file
         ? relative(extractedPath, fileResult.file) || fileResult.file
         : "unknown";
       for (const finding of fileResult.findings) {
+        if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
         const { score, disclaimer } = scoreConfidence(finding, filePath, fileResult.findings);
-        await prisma.finding.create({
-          data: {
-            scanId: scan.id,
-            ruleId: finding.rule_id,
-            category: categoryFromRuleId(finding.rule_id),
-            severity: normalizeSeverity(finding.severity),
-            description: stripSurrogates(finding.description || ""),
-            filePath,
-            lineNumber: finding.line ?? 0,
-            matchedText: stripSurrogates((finding.matched_text ?? "").slice(0, 500)),
-            context: stripSurrogates(finding.context || ""),
-            confidence: score,
-            disclaimer,
-          },
+        findingRows.push({
+          scanId: scan.id,
+          ruleId: finding.rule_id,
+          category: categoryFromRuleId(finding.rule_id),
+          severity: normalizeSeverity(finding.severity),
+          description: stripSurrogates(finding.description || ""),
+          filePath,
+          lineNumber: finding.line ?? 0,
+          matchedText: stripSurrogates((finding.matched_text ?? "").slice(0, 500)),
+          context: stripSurrogates(finding.context || ""),
+          confidence: score,
+          disclaimer,
         });
-        findingsCount++;
       }
     }
+
+    // Batch insert all findings in one call
+    if (findingRows.length > 0) {
+      await prisma.finding.createMany({ data: findingRows });
+    }
+    const findingsCount = findingRows.length;
 
     return { packageName: packageInfo.name, status: "scanned", findingsCount };
   } catch (err) {
@@ -213,6 +231,7 @@ async function scrapeMarketplace(
   prisma: PrismaClient,
   name: MarketplaceName,
   maxPackages?: number,
+  timeoutMs?: number,
 ): Promise<ScrapeResult[]> {
   console.log(`\n=== Scraping ${name} ===`);
 
@@ -222,10 +241,17 @@ async function scrapeMarketplace(
     return [];
   }
 
+  const deadline = timeoutMs ? Date.now() + timeoutMs : undefined;
   const results: ScrapeResult[] = [];
   const downloader = getDownloader(name, maxPackages);
 
   for await (const download of downloader) {
+    // Check time budget before processing next package
+    if (deadline && Date.now() >= deadline) {
+      console.log(`  [T] ${name} — time budget reached, moving on`);
+      break;
+    }
+
     const result = await processPackage(prisma, download, marketplace.id);
     results.push(result);
 
@@ -264,10 +290,11 @@ async function main() {
       ? [ENV_MARKETPLACE]
       : (Object.keys(MARKETPLACES) as MarketplaceName[]);
 
-    // Step 3: Scrape each marketplace
+    // Step 3: Scrape each marketplace (with per-marketplace time budget)
     const allResults: Record<string, ScrapeResult[]> = {};
+    const perMarketplaceTimeout = ENV_MAX_PACKAGES ? undefined : MARKETPLACE_TIMEOUT_MS;
     for (const mp of marketplaces) {
-      allResults[mp] = await scrapeMarketplace(prisma, mp, ENV_MAX_PACKAGES);
+      allResults[mp] = await scrapeMarketplace(prisma, mp, ENV_MAX_PACKAGES, perMarketplaceTimeout);
     }
 
     // Step 4: Recompute stats
