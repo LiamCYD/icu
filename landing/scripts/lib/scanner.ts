@@ -40,11 +40,12 @@ export async function runIcuScan(targetPath: string): Promise<IcuScanOutput> {
           const msg = parseErr instanceof Error ? parseErr.message : "";
           if (msg.includes("Unicode") || msg.includes("escape")) {
             try {
-              // Replace \uXXXX where XXXX isn't 4 hex digits, being careful
-              // not to touch \\u (escaped backslash + u) by checking for
-              // an odd number of preceding backslashes.
+              // Replace ALL \uXXXX where XXXX isn't 4 valid hex digits.
+              // This may also replace \\uXXXX (literal backslash + u) but
+              // in the retry path the JSON is already unparseable, so a
+              // minor data corruption is better than a total failure.
               const aggressive = stdout.replace(
-                /(?<=(?:^|[^\\])(?:\\\\)*)\\u(?![0-9a-fA-F]{4})/g,
+                /\\u(?![0-9a-fA-F]{4})[0-9a-zA-Z]{0,4}/g,
                 "\\ufffd",
               );
               const output = JSON.parse(aggressive) as IcuScanOutput;
