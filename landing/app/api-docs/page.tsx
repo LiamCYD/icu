@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { CopyBlock } from "@/components/shared/copy-block";
 
 const API_ENDPOINTS = [
   {
@@ -15,14 +16,14 @@ const API_ENDPOINTS = [
       { name: "sort", type: "string", description: "Sort by: firstSeen, lastScanned, name, riskLevel" },
       { name: "order", type: "string", description: "Sort order: asc or desc" },
     ],
-    example: "curl 'https://icu.example.com/api/threats?risk=critical&limit=5'",
+    example: "curl 'https://icu-cli.com/api/threats?risk=critical&limit=5'",
   },
   {
     method: "GET",
     path: "/api/threats/:id",
     description: "Get full threat report including scan history and findings",
     params: [],
-    example: "curl 'https://icu.example.com/api/threats/clx123abc'",
+    example: "curl 'https://icu-cli.com/api/threats/clx123abc'",
   },
   {
     method: "GET",
@@ -34,21 +35,21 @@ const API_ENDPOINTS = [
       { name: "q", type: "string", description: "Search authors by name" },
       { name: "sort", type: "string", description: "Sort by: lastSeen, firstSeen, name" },
     ],
-    example: "curl 'https://icu.example.com/api/authors?limit=10'",
+    example: "curl 'https://icu-cli.com/api/authors?limit=10'",
   },
   {
     method: "GET",
     path: "/api/authors/:id",
     description: "Get author profile with their packages",
     params: [],
-    example: "curl 'https://icu.example.com/api/authors/clx456def'",
+    example: "curl 'https://icu-cli.com/api/authors/clx456def'",
   },
   {
     method: "GET",
     path: "/api/stats",
     description: "Get dashboard aggregate statistics and marketplace data",
     params: [],
-    example: "curl 'https://icu.example.com/api/stats'",
+    example: "curl 'https://icu-cli.com/api/stats'",
   },
   {
     method: "GET",
@@ -59,7 +60,7 @@ const API_ENDPOINTS = [
       { name: "type", type: "string", description: "Scope: packages, authors, or all (default)" },
       { name: "limit", type: "number", description: "Max results per type (default: 10, max: 50)" },
     ],
-    example: "curl 'https://icu.example.com/api/search?q=claude&type=packages'",
+    example: "curl 'https://icu-cli.com/api/search?q=claude&type=packages'",
   },
 ];
 
@@ -75,14 +76,16 @@ export default function ApiDocsPage() {
 
       <div className="rounded-[22px] border border-border p-6">
         <p className="text-sm text-white/55">
-          All endpoints return JSON responses. Pagination is included where
-          applicable. Rate limit: 100 requests/minute/IP.
+          All endpoints return JSON. No authentication required. Rate limit: 100 requests/minute/IP.
         </p>
         <p className="mt-2 text-sm text-white/55">
           Base URL:{" "}
           <code className="rounded bg-border/30 px-1.5 py-0.5 text-xs text-white">
-            https://icu.example.com
+            https://icu-cli.com
           </code>
+        </p>
+        <p className="mt-1 text-xs text-white/35">
+          Rate-limited responses return HTTP 429. Pagination is 0-indexed with default page size of 20.
         </p>
       </div>
 
@@ -140,9 +143,7 @@ export default function ApiDocsPage() {
                 <h4 className="mb-2 text-xs font-medium uppercase text-white/50">
                   Example
                 </h4>
-                <pre className="overflow-x-auto rounded-md bg-[#0d1b20] border border-border p-3 text-xs">
-                  <code className="text-[#3a8a8c]">{endpoint.example}</code>
-                </pre>
+                <CopyBlock code={endpoint.example} />
               </div>
             </div>
           </div>

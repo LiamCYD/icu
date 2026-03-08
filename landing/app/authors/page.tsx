@@ -1,10 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { getAuthors } from "@/lib/queries/authors";
 import { parsePage, paginationMeta, formatRelativeDate } from "@/lib/utils";
 import { DEFAULT_PAGE_SIZE, RISK_BG_CLASSES, type RiskLevel } from "@/lib/constants";
 import { Pagination } from "@/components/shared/pagination";
+import { AuthorSearch } from "@/components/shared/author-search";
 import { Badge } from "@/components/ui/badge";
 import { Package } from "lucide-react";
 
@@ -34,6 +36,10 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
         </p>
       </div>
 
+      <Suspense>
+        <AuthorSearch />
+      </Suspense>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {authors.map((author) => {
           const riskCounts: Record<string, number> = {};
@@ -43,7 +49,7 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
 
           return (
             <Link key={author.id} href={`/authors/${author.id}`}>
-              <div className="rounded-[22px] border border-border p-4 transition-colors hover:border-white/20">
+              <div className="rounded-[22px] border border-border p-4 transition-all hover:border-white/20 hover:bg-white/[0.02]">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{author.name}</h3>
@@ -83,11 +89,23 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
 
       {authors.length === 0 && (
         <div className="py-12 text-center text-white/50">
-          No authors found.
+          <p>No authors found.</p>
+          {sp.q && (
+            <p className="mt-2 text-sm">
+              <Link href="/authors" className="text-[#3a8a8c] hover:underline">
+                Clear search
+              </Link>
+            </p>
+          )}
         </div>
       )}
 
-      <Pagination page={pagination.page} totalPages={pagination.totalPages} />
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={total}
+        pageSize={limit}
+      />
     </div>
   );
 }

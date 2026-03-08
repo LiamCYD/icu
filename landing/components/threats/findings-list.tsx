@@ -8,6 +8,26 @@ import {
   getConfidenceTier,
   type Category,
 } from "@/lib/constants";
+import { Flag } from "lucide-react";
+
+/** Short human-readable explainer for each rule prefix. */
+const RULE_EXPLAINERS: Record<string, string> = {
+  "PI-": "This rule detects text that attempts to override or hijack AI system instructions.",
+  "DE-": "This rule detects code that accesses sensitive files or credentials, which could be used to steal secrets.",
+  "OB-": "This rule detects obfuscated or encoded content that may be hiding malicious payloads.",
+  "SC-": "This rule detects dynamic code execution patterns (eval, exec, subprocess) that can run arbitrary commands.",
+  "NS-": "This rule detects network calls that could be used to phone home or exfiltrate data.",
+  "DO-": "This rule found suspicious content hidden inside encoded data (base64, hex, etc.).",
+  "EN-": "This rule detected a high-entropy string that may be an encoded payload or hardcoded secret.",
+  "DB-": "This file matches a known malicious signature in the threat database.",
+};
+
+function getRuleExplainer(ruleId: string): string | null {
+  for (const [prefix, explainer] of Object.entries(RULE_EXPLAINERS)) {
+    if (ruleId.startsWith(prefix)) return explainer;
+  }
+  return null;
+}
 
 function falsePositiveUrl(finding: Finding): string {
   const title = encodeURIComponent(
@@ -63,12 +83,16 @@ export function FindingsList({ findings }: FindingsListProps) {
     <div className="space-y-4">
       {Array.from(byFile.entries()).map(([filePath, fileFindings]) => (
         <div key={filePath} className="overflow-hidden rounded-[22px] border border-border">
-          <div className="border-b border-border px-4 py-2">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <code className="text-sm text-white/50 break-all">{filePath}</code>
+            <span className="ml-2 shrink-0 text-xs text-white/30">
+              {fileFindings.length} finding{fileFindings.length !== 1 ? "s" : ""}
+            </span>
           </div>
           <div className="divide-y divide-border">
             {fileFindings.map((f) => {
               const tier = f.confidence != null ? getConfidenceTier(f.confidence) : null;
+              const explainer = getRuleExplainer(f.ruleId);
               return (
                 <div key={f.id} className="space-y-2 p-4">
                   <div className="flex flex-wrap items-center gap-2">
@@ -92,6 +116,9 @@ export function FindingsList({ findings }: FindingsListProps) {
                     </span>
                   </div>
                   <p className="text-sm">{f.description}</p>
+                  {explainer && (
+                    <p className="text-xs text-white/35">{explainer}</p>
+                  )}
                   {f.disclaimer && (
                     <p className="text-xs text-white/40 italic">{f.disclaimer}</p>
                   )}
@@ -104,8 +131,9 @@ export function FindingsList({ findings }: FindingsListProps) {
                     href={falsePositiveUrl(f)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block text-xs text-white/30 hover:text-white/60 transition-colors"
+                    className="inline-flex items-center gap-1 text-xs text-white/40 hover:text-[#3a8a8c] transition-colors"
                   >
+                    <Flag className="h-3 w-3" />
                     Report false positive
                   </a>
                 </div>

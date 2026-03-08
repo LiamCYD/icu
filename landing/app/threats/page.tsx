@@ -33,13 +33,14 @@ export default async function ThreatsPage({ searchParams }: ThreatsPageProps) {
   ]);
 
   const pagination = paginationMeta(total, page, limit);
+  const hasFilters = !!(sp.risk || sp.category || sp.marketplace || sp.q);
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
       <div>
         <h1 className="display-heading text-3xl">Threat Database</h1>
         <p className="light-text mt-1 text-lg opacity-55">
-          {total} malicious packages detected across AI marketplaces
+          {total.toLocaleString()} {hasFilters ? "matching" : ""} packages detected across AI marketplaces
         </p>
       </div>
 
@@ -51,7 +52,12 @@ export default async function ThreatsPage({ searchParams }: ThreatsPageProps) {
         <ThreatsTable threats={packages} />
       </div>
 
-      <Pagination page={pagination.page} totalPages={pagination.totalPages} />
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={total}
+        pageSize={limit}
+      />
     </div>
   );
 }

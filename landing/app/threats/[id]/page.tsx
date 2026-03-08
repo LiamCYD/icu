@@ -9,15 +9,55 @@ import { formatDate } from "@/lib/utils";
 import {
   ChevronRight,
   ExternalLink,
-  FileText,
   Hash,
   User,
   Calendar,
   Store,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldX,
 } from "lucide-react";
 
 interface ThreatDetailPageProps {
   params: Promise<{ id: string }>;
+}
+
+function VerdictBanner({ riskLevel, findingsCount }: { riskLevel: string; findingsCount: number }) {
+  if (findingsCount === 0 || riskLevel === "clean") {
+    return (
+      <div className="flex items-center gap-3 rounded-[22px] border border-[#3a8a8c]/30 bg-[#3a8a8c]/5 p-4">
+        <ShieldCheck className="h-6 w-6 shrink-0 text-[#3a8a8c]" />
+        <div>
+          <p className="font-medium text-[#3a8a8c]">No threats detected</p>
+          <p className="text-sm text-white/50">This package appears clean based on automated scanning.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (riskLevel === "low" || riskLevel === "medium") {
+    return (
+      <div className="flex items-center gap-3 rounded-[22px] border border-[#d4a853]/30 bg-[#d4a853]/5 p-4">
+        <ShieldAlert className="h-6 w-6 shrink-0 text-[#d4a853]" />
+        <div>
+          <p className="font-medium text-[#d4a853]">Low-confidence findings — review before using</p>
+          <p className="text-sm text-white/50">Automated scanning found patterns that may be benign. Check findings below and use your judgement.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-[22px] border border-[#e05252]/30 bg-[#e05252]/5 p-4">
+      <ShieldX className="h-6 w-6 shrink-0 text-[#e05252]" />
+      <div>
+        <p className="font-medium text-[#e05252]">
+          {riskLevel === "critical" ? "Critical findings detected" : "High-severity findings detected"} — do not use without review
+        </p>
+        <p className="text-sm text-white/50">This package contains patterns associated with malicious behaviour. Inspect the findings carefully before installing.</p>
+      </div>
+    </div>
+  );
 }
 
 export default async function ThreatDetailPage({
@@ -35,6 +75,7 @@ export default async function ThreatDetailPage({
   ).length;
   const highCount = findings.filter((f) => f.severity === "high").length;
   const mediumCount = findings.filter((f) => f.severity === "medium").length;
+  const lowCount = findings.filter((f) => f.severity === "low").length;
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 px-6 py-12 md:px-20">
@@ -46,6 +87,9 @@ export default async function ThreatDetailPage({
         <ChevronRight className="h-4 w-4" />
         <span className="text-white">{threat.name}</span>
       </nav>
+
+      {/* Verdict banner */}
+      <VerdictBanner riskLevel={threat.riskLevel} findingsCount={findings.length} />
 
       {/* Header */}
       <div className="space-y-4">
@@ -80,7 +124,7 @@ export default async function ThreatDetailPage({
             First seen {formatDate(threat.firstSeen)}
           </span>
           {threat.sha256 && (
-            <span className="flex items-center gap-1.5 font-mono text-xs">
+            <span className="flex items-center gap-1.5 font-mono text-xs" title={threat.sha256}>
               <Hash className="h-4 w-4" />
               {threat.sha256.slice(0, 16)}...
             </span>
@@ -99,16 +143,16 @@ export default async function ThreatDetailPage({
         </div>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards — only show non-zero counts */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: "Total", value: findings.length, icon: FileText },
+        {([
           { label: "Critical", value: criticalCount, color: "text-[#e05252]" },
           { label: "High", value: highCount, color: "text-[#5bb8d4]" },
           { label: "Medium", value: mediumCount, color: "text-[#d4a853]" },
-        ].map((stat) => (
+          { label: "Low", value: lowCount, color: "text-[#6b8a7a]" },
+        ] as const).filter(s => s.value > 0).map((stat) => (
           <div key={stat.label} className="rounded-[22px] border border-border p-4 text-center">
-            <p className={`display-heading text-2xl ${stat.color || ""}`}>
+            <p className={`display-heading text-2xl ${stat.color}`}>
               {stat.value}
             </p>
             <p className="text-xs text-white/50">{stat.label}</p>
@@ -118,7 +162,12 @@ export default async function ThreatDetailPage({
 
       {/* Findings */}
       <div>
-        <h2 className="display-heading mb-4 text-xl">Findings</h2>
+        <h2 className="display-heading mb-4 text-xl">
+          Findings
+          <span className="ml-2 text-sm font-normal text-white/40">
+            {findings.length} detection{findings.length !== 1 ? "s" : ""}
+          </span>
+        </h2>
         <FindingsList findings={findings} />
       </div>
 

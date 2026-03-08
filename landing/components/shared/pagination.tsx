@@ -8,9 +8,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface PaginationProps {
   page: number;
   totalPages: number;
+  total?: number;
+  pageSize?: number;
 }
 
-export function Pagination({ page, totalPages }: PaginationProps) {
+export function Pagination({ page, totalPages, total, pageSize }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -20,7 +22,7 @@ export function Pagination({ page, totalPages }: PaginationProps) {
     return `${pathname}?${params.toString()}`;
   }
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1 && !total) return null;
 
   const pages: (number | "...")[] = [];
   for (let i = 1; i <= totalPages; i++) {
@@ -31,49 +33,61 @@ export function Pagination({ page, totalPages }: PaginationProps) {
     }
   }
 
+  const start = total && pageSize ? (page - 1) * pageSize + 1 : null;
+  const end = total && pageSize ? Math.min(page * pageSize, total) : null;
+
   return (
-    <div className="flex items-center justify-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        asChild
-        disabled={page <= 1}
-      >
-        <Link href={buildHref(page - 1)} aria-label="Previous page">
-          <ChevronLeft className="h-4 w-4" />
-        </Link>
-      </Button>
-
-      {pages.map((p, i) =>
-        p === "..." ? (
-          <span key={`dots-${i}`} className="px-2 text-muted-foreground">
-            ...
-          </span>
-        ) : (
-          <Button
-            key={p}
-            variant={p === page ? "secondary" : "ghost"}
-            size="icon"
-            className="h-8 w-8 text-xs"
-            asChild
-          >
-            <Link href={buildHref(p)}>{p}</Link>
-          </Button>
-        )
+    <div className="flex flex-col items-center gap-2">
+      {total != null && start != null && end != null && (
+        <p className="text-sm text-white/40">
+          Showing {start}–{end} of {total.toLocaleString()} results
+        </p>
       )}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 sm:h-8 sm:w-8"
+            asChild
+            disabled={page <= 1}
+          >
+            <Link href={buildHref(page - 1)} aria-label="Previous page">
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        asChild
-        disabled={page >= totalPages}
-      >
-        <Link href={buildHref(page + 1)} aria-label="Next page">
-          <ChevronRight className="h-4 w-4" />
-        </Link>
-      </Button>
+          {pages.map((p, i) =>
+            p === "..." ? (
+              <span key={`dots-${i}`} className="px-2 text-muted-foreground">
+                ...
+              </span>
+            ) : (
+              <Button
+                key={p}
+                variant={p === page ? "secondary" : "ghost"}
+                size="icon"
+                className="h-10 w-10 text-sm sm:h-8 sm:w-8 sm:text-xs"
+                asChild
+              >
+                <Link href={buildHref(p)}>{p}</Link>
+              </Button>
+            )
+          )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 sm:h-8 sm:w-8"
+            asChild
+            disabled={page >= totalPages}
+          >
+            <Link href={buildHref(page + 1)} aria-label="Next page">
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

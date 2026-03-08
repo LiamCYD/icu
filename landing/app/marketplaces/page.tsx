@@ -20,9 +20,12 @@ export default async function MarketplacesPage() {
 
       {/* Safety comparison bar chart */}
       <div className="rounded-[22px] border border-border p-6">
-        <p className="light-text mb-4 text-lg">
-          Safety Scores
-        </p>
+        <div className="mb-4">
+          <p className="light-text text-lg">Safety Scores</p>
+          <p className="text-xs text-white/35">
+            Percentage of packages with no critical or high findings
+          </p>
+        </div>
         <div className="space-y-4">
           {marketplaces
             .sort((a, b) => b.safetyScore - a.safetyScore)
@@ -68,7 +71,7 @@ export default async function MarketplacesPage() {
                 rel="noopener noreferrer"
                 className="text-white/50 transition-colors hover:text-white"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-4 w-4" aria-label="Visit website" />
               </a>
             </div>
 
@@ -95,7 +98,7 @@ export default async function MarketplacesPage() {
               })}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" title="% of packages with no critical or high findings">
               <span className="text-xs text-white/50">
                 Safety Score:
               </span>

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -9,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { RiskBadge } from "@/components/shared/risk-badge";
 import { formatRelativeDate } from "@/lib/utils";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 interface ThreatRow {
   id: string;
@@ -20,11 +24,57 @@ interface ThreatRow {
   _count: { scans: number };
 }
 
+function SortHeader({
+  label,
+  field,
+  className,
+}: {
+  label: string;
+  field: string;
+  className?: string;
+}) {
+  const searchParams = useSearchParams();
+  const currentSort = searchParams.get("sort") || "firstSeen";
+  const currentOrder = searchParams.get("order") || "desc";
+  const isActive = currentSort === field;
+  const nextOrder = isActive && currentOrder === "desc" ? "asc" : "desc";
+
+  const params = new URLSearchParams(searchParams.toString());
+  params.set("sort", field);
+  params.set("order", nextOrder);
+  params.delete("page");
+
+  return (
+    <TableHead className={className}>
+      <Link
+        href={`/threats?${params.toString()}`}
+        className="inline-flex items-center gap-1 transition-colors hover:text-white"
+      >
+        {label}
+        {isActive ? (
+          currentOrder === "desc" ? (
+            <ArrowDown className="h-3 w-3" />
+          ) : (
+            <ArrowUp className="h-3 w-3" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-30" />
+        )}
+      </Link>
+    </TableHead>
+  );
+}
+
 export function ThreatsTable({ threats }: { threats: ThreatRow[] }) {
   if (threats.length === 0) {
     return (
       <div className="py-12 text-center text-white/50">
-        No threats found matching your filters.
+        <p>No threats found matching your filters.</p>
+        <p className="mt-2 text-sm">
+          <Link href="/threats" className="text-[#3a8a8c] hover:underline">
+            Clear all filters
+          </Link>
+        </p>
       </div>
     );
   }
@@ -33,14 +83,14 @@ export function ThreatsTable({ threats }: { threats: ThreatRow[] }) {
     <Table>
       <TableHeader>
         <TableRow className="border-border hover:bg-transparent">
-          <TableHead className="w-[100px]">Risk</TableHead>
-          <TableHead>Package</TableHead>
+          <SortHeader label="Risk" field="riskLevel" className="w-[100px]" />
+          <SortHeader label="Package" field="name" />
           <TableHead className="hidden sm:table-cell">Marketplace</TableHead>
           <TableHead className="hidden md:table-cell">Author</TableHead>
           <TableHead className="hidden lg:table-cell text-center">
             Scans
           </TableHead>
-          <TableHead className="text-right">First Seen</TableHead>
+          <SortHeader label="First Seen" field="firstSeen" className="text-right" />
         </TableRow>
       </TableHeader>
       <TableBody>

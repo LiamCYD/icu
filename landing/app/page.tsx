@@ -7,6 +7,7 @@ import { StatCards } from "@/components/dashboard/stat-cards";
 import { DetectionChart } from "@/components/dashboard/detection-chart";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { RecentThreats } from "@/components/dashboard/recent-threats";
+import { PackageSearch } from "@/components/shared/package-search";
 import { getDashboardStats, getMarketplaceStats } from "@/lib/queries/stats";
 import { getRecentThreats } from "@/lib/queries/threats";
 
@@ -39,7 +40,11 @@ export default async function DashboardPage() {
             Scanning AI marketplaces for malicious packages. Prompt injection,
             data exfiltration, and obfuscation — detected and exposed.
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+
+          {/* Package search */}
+          <PackageSearch />
+
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
             <Button variant="icu" size="lg" className="px-6 py-3 text-base sm:px-12 sm:py-6 sm:text-xl" asChild>
               <a href="https://github.com/LiamCYD/icu" target="_blank" rel="noopener noreferrer">
                 GitHub
@@ -62,6 +67,7 @@ export default async function DashboardPage() {
           totalFindings={stats.totalFindings}
           totalPackages={stats.totalPackages}
           marketplaceCount={marketplaceStats.length}
+          lastUpdated={stats.lastUpdated}
         />
 
         {/* Charts row */}
@@ -114,9 +120,14 @@ export default async function DashboardPage() {
 
           {/* Marketplace safety scores */}
           <div className="rounded-[22px] border border-border p-6">
-            <p className="light-text mb-4 text-lg">
-              Marketplace Safety Scores
-            </p>
+            <div className="mb-4">
+              <p className="light-text text-lg">
+                Marketplace Safety Scores
+              </p>
+              <p className="text-xs text-white/35">
+                % of packages with no critical or high findings
+              </p>
+            </div>
             <div className="space-y-3">
               {marketplaceStats.map((mp) => (
                 <div key={mp.id} className="flex items-center gap-3">

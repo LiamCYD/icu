@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,54 +11,80 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { GITHUB_REPO, CATEGORY_LABELS, type Category } from "@/lib/constants";
-import { Eye, Zap, Lock, ChevronRight } from "lucide-react";
+import { Eye, Zap, Lock, ChevronRight, ChevronDown } from "lucide-react";
 
 const DETECTION_RULES = [
   { id: "PI-001", category: "prompt_injection", severity: "critical", description: "System prompt override / instruction hijacking" },
-  { id: "PI-002", category: "prompt_injection", severity: "high", description: "Hidden instructions in tool descriptions" },
-  { id: "PI-003", category: "prompt_injection", severity: "high", description: "Invisible Unicode instruction injection" },
-  { id: "PI-004", category: "prompt_injection", severity: "medium", description: "User input passed directly to system prompt" },
-  { id: "DE-001", category: "data_exfiltration", severity: "critical", description: "SSH key / credential file reading" },
-  { id: "DE-002", category: "data_exfiltration", severity: "critical", description: "Environment variable exfiltration via HTTP" },
-  { id: "DE-003", category: "data_exfiltration", severity: "critical", description: "API key / secret harvesting and transmission" },
-  { id: "DE-004", category: "data_exfiltration", severity: "critical", description: "Workspace file upload to external server" },
-  { id: "DE-005", category: "data_exfiltration", severity: "high", description: "Sensitive file glob patterns (.env, .pem, .key)" },
-  { id: "OB-001", category: "obfuscation", severity: "high", description: "Base64-encoded payload concealing URLs or code" },
-  { id: "OB-002", category: "obfuscation", severity: "medium", description: "Hex-encoded strings concealing data" },
-  { id: "OB-003", category: "obfuscation", severity: "high", description: "Dynamic import / require with encoded module names" },
-  { id: "SC-001", category: "suspicious_commands", severity: "critical", description: "Arbitrary shell command execution (shell=True)" },
-  { id: "SC-002", category: "suspicious_commands", severity: "critical", description: "SQL injection via unsanitized query interpolation" },
-  { id: "SC-003", category: "suspicious_commands", severity: "medium", description: "eval() / exec() on user-provided strings" },
-  { id: "SC-004", category: "suspicious_commands", severity: "high", description: "Unsandboxed code execution in host namespace" },
-  { id: "NS-001", category: "network_suspicious", severity: "high", description: "Requests to raw IP addresses" },
-  { id: "NS-002", category: "network_suspicious", severity: "high", description: "Traffic proxied through unknown intermediary" },
-  { id: "NS-003", category: "network_suspicious", severity: "low", description: "Phone-home / update check on import" },
+  { id: "PI-002", category: "prompt_injection", severity: "critical", description: "Instruction override: ignore above instructions" },
+  { id: "PI-003", category: "prompt_injection", severity: "critical", description: "Instruction override: disregard prior instructions" },
+  { id: "PI-004", category: "prompt_injection", severity: "high", description: "Role reassignment attempt" },
+  { id: "PI-005", category: "prompt_injection", severity: "high", description: "New instruction injection" },
+  { id: "PI-006", category: "prompt_injection", severity: "high", description: "Fake system prompt injection" },
+  { id: "PI-007", category: "prompt_injection", severity: "critical", description: "XML system tag injection" },
+  { id: "PI-008", category: "prompt_injection", severity: "critical", description: "Directive to ignore safety rules" },
+  { id: "DE-001", category: "data_exfiltration", severity: "critical", description: "SSH directory access in code" },
+  { id: "DE-002", category: "data_exfiltration", severity: "high", description: "Environment file access (.env) in code" },
+  { id: "DE-003", category: "data_exfiltration", severity: "critical", description: "AWS credentials file access" },
+  { id: "DE-004", category: "data_exfiltration", severity: "high", description: "Git config access" },
+  { id: "DE-005", category: "data_exfiltration", severity: "critical", description: "SSH private key (id_rsa) access" },
+  { id: "DE-006", category: "data_exfiltration", severity: "critical", description: "GPG keyring access" },
+  { id: "DE-007", category: "data_exfiltration", severity: "medium", description: "Keychain access in code" },
+  { id: "DE-008", category: "data_exfiltration", severity: "high", description: "NPM config access (.npmrc)" },
+  { id: "DE-009", category: "data_exfiltration", severity: "high", description: "PyPI config access (.pypirc)" },
+  { id: "DE-010", category: "data_exfiltration", severity: "critical", description: "Curl POST with variable interpolation" },
+  { id: "DE-011", category: "data_exfiltration", severity: "critical", description: "Wget POST request (data exfiltration)" },
+  { id: "DE-012", category: "data_exfiltration", severity: "critical", description: "Netcat connection (reverse shell/exfiltration)" },
+  { id: "OB-001", category: "obfuscation", severity: "medium", description: "Possible base64-encoded payload" },
+  { id: "OB-002", category: "obfuscation", severity: "high", description: "Hex-encoded byte sequence" },
+  { id: "OB-003", category: "obfuscation", severity: "high", description: "Unicode escape sequence chain" },
+  { id: "OB-004", category: "obfuscation", severity: "critical", description: "Multiple zero-width characters (hidden content)" },
+  { id: "SC-001", category: "suspicious_commands", severity: "medium", description: "Python subprocess execution" },
+  { id: "SC-002", category: "suspicious_commands", severity: "high", description: "OS system command execution" },
+  { id: "SC-003", category: "suspicious_commands", severity: "high", description: "Dynamic code execution via exec()" },
+  { id: "SC-004", category: "suspicious_commands", severity: "high", description: "Dynamic code evaluation via eval()" },
+  { id: "SC-005", category: "suspicious_commands", severity: "medium", description: "Node.js child process spawning" },
+  { id: "SC-006", category: "suspicious_commands", severity: "high", description: "Java runtime command execution" },
+  { id: "NS-001", category: "network_suspicious", severity: "medium", description: "Python HTTP requests library call" },
+  { id: "NS-002", category: "network_suspicious", severity: "medium", description: "Python urllib network request" },
+  { id: "NS-003", category: "network_suspicious", severity: "medium", description: "JavaScript fetch() call" },
+  { id: "NS-004", category: "network_suspicious", severity: "medium", description: "XMLHttpRequest usage" },
+  { id: "NS-005", category: "network_suspicious", severity: "medium", description: "Socket/database connection to literal address" },
+  { id: "NS-006", category: "network_suspicious", severity: "high", description: "DNS resolution (potential DNS exfiltration)" },
+  { id: "NS-007", category: "network_suspicious", severity: "medium", description: "Socket address resolution" },
 ];
 
 const FAQ = [
   {
     q: "What is ICU?",
-    a: "ICU (I See You) is an open-source AI supply chain firewall. It scans files and packages for prompt injection, data exfiltration, obfuscation, and other malicious patterns targeting AI development tools.",
+    a: "ICU (I See You) is an open-source scanner that monitors AI package marketplaces for malicious code. It detects prompt injection, credential theft, obfuscated payloads, and suspicious command execution — then publishes the results here as a public transparency report.",
   },
   {
     q: "How does the scanning work?",
-    a: "ICU uses a tiered detection pipeline: fast hash-based reputation checks, heuristic pattern matching with 37 detection rules, and deep analysis including entropy measurement and deobfuscation.",
+    a: "ICU uses a three-stage pipeline: (1) Hash-based reputation check against known malicious files, (2) Pattern matching with 37 detection rules that look for specific malicious patterns in source code, and (3) Deep analysis including entropy measurement and deobfuscation to find hidden payloads. Rules only fire on executable code files — not READMEs or config files — to minimize false positives.",
   },
   {
     q: "What marketplaces are scanned?",
-    a: "Currently we scan npm, PyPI, Smithery (MCP servers), and Glama (AI agents). More marketplaces are planned as the project grows.",
+    a: "Currently: npm, PyPI, Smithery, Glama, MCP Registry, SkillsMP, and PulseMCP. These cover the main registries where MCP servers, AI agents, and LLM tools are distributed.",
   },
   {
     q: "How often is data updated?",
-    a: "The scraper pipeline runs every 6 hours via GitHub Actions, scanning new and updated packages across all monitored marketplaces.",
+    a: "The scraper runs daily via GitHub Actions. Each run scans new and updated packages across all monitored marketplaces. The timestamp on the dashboard shows when data was last refreshed.",
+  },
+  {
+    q: "What do the confidence levels mean?",
+    a: "Each finding has a confidence score from 0 to 1. High confidence (0.8+) means the pattern is very likely malicious. Medium (0.5-0.8) means it's suspicious but could be legitimate. Low (0.2-0.5) means it's probably benign. Findings in test files, documentation, or config files get lower confidence automatically.",
   },
   {
     q: "Is this open source?",
-    a: "Yes. Both the ICU scanner and this website are open source under the Apache 2.0 license. Contributions are welcome.",
+    a: "Yes. Both the ICU scanner CLI and this website are open source under the Apache 2.0 license. Contributions are welcome — especially new detection rules and false positive reports.",
   },
   {
     q: "How can I protect my project?",
-    a: "Install ICU locally with `pip install icu`, then run `icu scan` on any files before using them. You can also set up git hooks with `icu hook install` for automatic scanning.",
+    a: "Install ICU locally with `pip install icu`, then run `icu scan` on any package before using it. You can also set up git hooks with `icu hook install` for automatic scanning on every commit.",
+  },
+  {
+    q: "I think a finding is wrong. What do I do?",
+    a: "Click 'Report false positive' on any finding to open a pre-filled GitHub issue. We review every report and use them to improve our detection rules. Getting it right matters to us.",
   },
 ];
 
@@ -65,6 +94,28 @@ const SEVERITY_CLASSES: Record<string, string> = {
   medium: "border-[#d4a853]/20 bg-[#d4a853]/10 text-[#d4a853]",
   low: "border-[#6b8a7a]/20 bg-[#6b8a7a]/10 text-[#6b8a7a]",
 };
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      onClick={() => setOpen((o) => !o)}
+      className="w-full rounded-[22px] border border-border p-4 text-left transition-colors hover:border-white/20"
+    >
+      <h3 className="flex items-center gap-2 font-medium">
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-[#3a8a8c]" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-[#3a8a8c]" />
+        )}
+        {q}
+      </h3>
+      {open && (
+        <p className="mt-2 pl-6 text-sm text-white/55">{a}</p>
+      )}
+    </button>
+  );
+}
 
 export default function AboutPage() {
   return (
@@ -100,17 +151,17 @@ export default function AboutPage() {
           {
             icon: Eye,
             title: "Scan",
-            desc: "Automated scraping of AI package marketplaces every 6 hours",
+            desc: "Automated daily scanning of 7 AI package marketplaces",
           },
           {
             icon: Zap,
             title: "Detect",
-            desc: "37 detection rules across 5 categories with tiered analysis",
+            desc: "37 detection rules across 5 categories with confidence scoring",
           },
           {
             icon: Lock,
             title: "Report",
-            desc: "Public threat database with full findings and code context",
+            desc: "Public threat database with full findings, code context, and verdicts",
           },
         ].map((step) => (
           <div key={step.title} className="rounded-[22px] border border-border p-6 text-center space-y-2">
@@ -125,6 +176,9 @@ export default function AboutPage() {
       <div className="overflow-x-auto rounded-[22px] border border-border">
         <div className="px-6 py-4">
           <h2 className="display-heading text-xl">Detection Rules ({DETECTION_RULES.length})</h2>
+          <p className="text-sm text-white/40 mt-1">
+            Data exfiltration rules (DE-*) only fire on executable code files — not READMEs, .gitignore, or config files.
+          </p>
         </div>
         <Table>
           <TableHeader>
@@ -173,15 +227,7 @@ export default function AboutPage() {
         </h2>
         <div className="space-y-3">
           {FAQ.map((item) => (
-            <div key={item.q} className="rounded-[22px] border border-border p-4">
-              <h3 className="flex items-center gap-2 font-medium">
-                <ChevronRight className="h-4 w-4 text-[#3a8a8c]" />
-                {item.q}
-              </h3>
-              <p className="mt-2 pl-6 text-sm text-white/55">
-                {item.a}
-              </p>
-            </div>
+            <FaqItem key={item.q} q={item.q} a={item.a} />
           ))}
         </div>
       </div>
