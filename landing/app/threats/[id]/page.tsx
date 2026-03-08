@@ -25,7 +25,7 @@ interface ThreatDetailPageProps {
 function VerdictBanner({ riskLevel, findingsCount }: { riskLevel: string; findingsCount: number }) {
   if (findingsCount === 0 || riskLevel === "clean") {
     return (
-      <div className="flex items-center gap-3 rounded-[22px] border border-[#3a8a8c]/30 bg-[#3a8a8c]/5 p-4">
+      <div className="ambient-glow flex items-center gap-3 rounded-[22px] border border-[#3a8a8c]/30 bg-[#3a8a8c]/5 p-4">
         <ShieldCheck className="h-6 w-6 shrink-0 text-[#3a8a8c]" />
         <div>
           <p className="font-medium text-[#3a8a8c]">No threats detected</p>
@@ -37,7 +37,7 @@ function VerdictBanner({ riskLevel, findingsCount }: { riskLevel: string; findin
 
   if (riskLevel === "low" || riskLevel === "medium") {
     return (
-      <div className="flex items-center gap-3 rounded-[22px] border border-[#d4a853]/30 bg-[#d4a853]/5 p-4">
+      <div className="ambient-glow flex items-center gap-3 rounded-[22px] border border-[#d4a853]/30 bg-[#d4a853]/5 p-4">
         <ShieldAlert className="h-6 w-6 shrink-0 text-[#d4a853]" />
         <div>
           <p className="font-medium text-[#d4a853]">Low-confidence findings — review before using</p>
@@ -48,7 +48,7 @@ function VerdictBanner({ riskLevel, findingsCount }: { riskLevel: string; findin
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-[22px] border border-[#e05252]/30 bg-[#e05252]/5 p-4">
+    <div className="ambient-glow flex items-center gap-3 rounded-[22px] border border-[#e05252]/30 bg-[#e05252]/5 p-4">
       <ShieldX className="h-6 w-6 shrink-0 text-[#e05252]" />
       <div>
         <p className="font-medium text-[#e05252]">

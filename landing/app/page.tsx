@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[830px]" style={{ background: "#172322" }}>
+      <section className="hero-bg relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[830px]">
         <ParticleEye />
         <div className="relative z-10 flex flex-col items-center gap-6">
           <h1 className="display-heading text-6xl sm:text-8xl lg:text-[131px] lg:leading-none">
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Content Section */}
-      <section className="mx-auto w-full max-w-[1600px] space-y-8 px-6 py-12 md:px-20">
+      <section className="dot-grid-bg mx-auto w-full max-w-[1600px] space-y-8 px-6 py-12 md:px-20">
         {/* Stat Cards */}
         <StatCards
           totalCritical={stats.totalCritical}

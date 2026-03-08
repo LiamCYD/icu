@@ -31,7 +31,7 @@ export function StatCards(props: StatCardsProps) {
           return (
             <div
               key={stat.key}
-              className="flex h-auto flex-col items-start gap-3 overflow-hidden rounded-[22px] border border-border px-4 py-4 sm:h-[176px] sm:flex-row sm:items-center sm:gap-8 sm:px-8 sm:py-0"
+              className="ambient-glow flex h-auto flex-col items-start gap-3 overflow-hidden rounded-[22px] border border-border px-4 py-4 sm:h-[176px] sm:flex-row sm:items-center sm:gap-8 sm:px-8 sm:py-0"
             >
               <div className={`shrink-0 rounded-lg p-2.5 ${stat.bg}`}>
                 <Icon className={`h-6 w-6 ${stat.color}`} />

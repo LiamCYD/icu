@@ -19,7 +19,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="w-full border-b border-border/40">
+    <header className="header-glow w-full border-b border-border/40">
       <div className="mx-auto flex h-[89px] max-w-[1920px] items-center justify-between px-6 md:px-20">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">

@@ -169,11 +169,11 @@
   --radius: 1.375rem; /* 22px — matches Figma card radius */
 
   /* ICU brand palette — derived from Figma */
-  --background: #172322;
+  --background: #0d1816;
   --foreground: #ffffff;
-  --card: #172322;
+  --card: #0d1816;
   --card-foreground: #ffffff;
-  --popover: #0d1b20;
+  --popover: #091412;
   --popover-foreground: #ffffff;
   --primary: #3a8a8c;
   --primary-foreground: #ffffff;
@@ -196,7 +196,7 @@
   --chart-5: #5ba3c9;
 
   /* Sidebar */
-  --sidebar: #0d1b20;
+  --sidebar: #091412;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #3a8a8c;
   --sidebar-primary-foreground: #ffffff;
@@ -235,19 +235,54 @@
 
 /* Glass card — kept for backwards compat, updated to match brand */
 .glass-card {
-  background: rgba(23, 35, 34, 0.6);
+  background: rgba(13, 24, 22, 0.6);
   border: 1px solid #264f5e;
 }
 
-/* Page background */
-.page-bg {
-  background: #172322;
+/* Ambient teal glow — use on stat cards, verdict banners, key elements */
+.ambient-glow {
+  box-shadow: 0 0 40px -12px rgba(58, 138, 140, 0.15),
+              0 0 80px -20px rgba(58, 138, 140, 0.08);
 }
 
-/* Hero background — placeholder for video/image */
+/* Header bottom glow line */
+.header-glow {
+  position: relative;
+}
+.header-glow::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(58, 138, 140, 0.4) 30%,
+    rgba(58, 138, 140, 0.6) 50%,
+    rgba(58, 138, 140, 0.4) 70%,
+    transparent 100%
+  );
+}
+
+/* Dot grid background for content sections */
+.dot-grid-bg {
+  background-image: radial-gradient(rgba(58, 138, 140, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Page background — dark base with subtle dot grid */
+.page-bg {
+  background: #0d1816;
+  background-image: radial-gradient(rgba(58, 138, 140, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Hero background */
 .hero-bg {
   position: relative;
-  background: #172322;
+  background: #0d1816;
 }
 .hero-bg::before {
   content: "";
@@ -256,11 +291,25 @@
   background: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(38, 79, 94, 0.15), transparent 70%);
   pointer-events: none;
 }
+/* Scanline overlay on hero */
+.hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 4px
+  );
+  pointer-events: none;
+}
 
 /* CTA section background */
 .cta-bg {
   position: relative;
-  background: #0d1b20;
+  background: #091412;
 }
 .cta-bg::before {
   content: "";
