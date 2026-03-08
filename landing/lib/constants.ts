@@ -25,6 +25,7 @@ export const CATEGORIES = [
   "obfuscation",
   "suspicious_commands",
   "network_suspicious",
+  "known_malicious",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -34,6 +35,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   obfuscation: "Obfuscation",
   suspicious_commands: "Suspicious Commands",
   network_suspicious: "Network Suspicious",
+  known_malicious: "Known Malicious",
 };
 
 export const CATEGORY_COLORS: Record<Category, string> = {
@@ -42,6 +44,7 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   obfuscation: "#d4a853",
   suspicious_commands: "#e08a4a",
   network_suspicious: "#5ba3c9",
+  known_malicious: "#c94040",
 };
 
 export const NAV_LINKS = [

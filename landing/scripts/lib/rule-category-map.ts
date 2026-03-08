@@ -4,6 +4,9 @@ const RULE_PREFIX_TO_CATEGORY: Record<string, string> = {
   "OB-": "obfuscation",
   "SC-": "suspicious_commands",
   "NS-": "network_suspicious",
+  "DO-": "obfuscation",
+  "EN-": "obfuscation",
+  "DB-": "known_malicious",
 };
 
 export function categoryFromRuleId(ruleId: string): string {
@@ -34,3 +37,6 @@ export function worstRisk(levels: string[]): string {
   }
   return RISK_ORDER[worst];
 }
+
+/** Minimum confidence score for a finding to influence the package risk level. */
+export const MIN_CONFIDENCE_FOR_RISK = 0.4;

@@ -220,8 +220,11 @@ class TestObfuscation:
 
     def test_ob_004_zero_width(self) -> None:
         rule = _get_rule("OB-004")
-        assert rule.compiled.search("text\u200bhere")
-        assert rule.compiled.search("\ufeff")
+        # Requires 2+ zero-width chars (single BOM or single zero-width is benign)
+        assert rule.compiled.search("text\u200b\u200chere")
+        assert rule.compiled.search("\ufeff\ufeff")
+        assert not rule.compiled.search("text\u200bhere")  # Single zero-width: no match
+        assert not rule.compiled.search("\ufeff")  # Single BOM: no match
         assert not rule.compiled.search("normal text only")
 
 

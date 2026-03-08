@@ -9,7 +9,7 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 neonConfig.webSocketConstructor = ws;
 import { MARKETPLACES, SCAN_STALENESS_HOURS, MAX_FINDINGS_PER_SCAN, MARKETPLACE_TIMEOUT_MS } from "./lib/config";
 import { runIcuScan } from "./lib/scanner";
-import { categoryFromRuleId, normalizeSeverity, worstRisk } from "./lib/rule-category-map";
+import { categoryFromRuleId, normalizeSeverity, worstRisk, MIN_CONFIDENCE_FOR_RISK } from "./lib/rule-category-map";
 import { scoreConfidence } from "./lib/confidence";
 import { recomputeStats } from "./lib/stats";
 import { npmDownloader } from "./downloaders/npm";
@@ -129,9 +129,50 @@ async function processPackage(
     // Run scanner
     const scanOutput = await runIcuScan(extractedPath);
 
-    // Normalize risk level from scanner output
-    const fileRisks = scanOutput.results.map((r) => normalizeSeverity(r.risk_level));
-    const overallRisk = fileRisks.length > 0 ? worstRisk(fileRisks) : "clean";
+    // Collect findings first (we need confidence scores to compute risk)
+    const findingRows: {
+      scanId: string;
+      ruleId: string;
+      category: string;
+      severity: string;
+      description: string;
+      filePath: string;
+      lineNumber: number;
+      matchedText: string;
+      context: string;
+      confidence: number | null;
+      disclaimer: string | null;
+    }[] = [];
+
+    for (const fileResult of scanOutput.results) {
+      if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
+      const filePath = fileResult.file
+        ? relative(extractedPath, fileResult.file) || fileResult.file
+        : "unknown";
+      for (const finding of fileResult.findings) {
+        if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
+        const { score, disclaimer } = scoreConfidence(finding, filePath, fileResult.findings);
+        findingRows.push({
+          scanId: "",  // filled after scan creation
+          ruleId: finding.rule_id,
+          category: categoryFromRuleId(finding.rule_id),
+          severity: normalizeSeverity(finding.severity),
+          description: stripSurrogates(finding.description || ""),
+          filePath,
+          lineNumber: finding.line ?? 0,
+          matchedText: stripSurrogates((finding.matched_text ?? "").slice(0, 500)),
+          context: stripSurrogates(finding.context || ""),
+          confidence: score,
+          disclaimer,
+        });
+      }
+    }
+
+    // Compute risk from confidence-filtered findings only
+    const credibleSeverities = findingRows
+      .filter((f) => (f.confidence ?? 0) >= MIN_CONFIDENCE_FOR_RISK)
+      .map((f) => f.severity);
+    const overallRisk = credibleSeverities.length > 0 ? worstRisk(credibleSeverities) : "clean";
 
     // Upsert package
     const pkg = await prisma.package.upsert({
@@ -172,46 +213,8 @@ async function processPackage(
       },
     });
 
-    // Collect findings (capped to avoid multi-thousand insert storms)
-    const findingRows: {
-      scanId: string;
-      ruleId: string;
-      category: string;
-      severity: string;
-      description: string;
-      filePath: string;
-      lineNumber: number;
-      matchedText: string;
-      context: string;
-      confidence: number | null;
-      disclaimer: string | null;
-    }[] = [];
-
-    for (const fileResult of scanOutput.results) {
-      if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
-      const filePath = fileResult.file
-        ? relative(extractedPath, fileResult.file) || fileResult.file
-        : "unknown";
-      for (const finding of fileResult.findings) {
-        if (findingRows.length >= MAX_FINDINGS_PER_SCAN) break;
-        const { score, disclaimer } = scoreConfidence(finding, filePath, fileResult.findings);
-        findingRows.push({
-          scanId: scan.id,
-          ruleId: finding.rule_id,
-          category: categoryFromRuleId(finding.rule_id),
-          severity: normalizeSeverity(finding.severity),
-          description: stripSurrogates(finding.description || ""),
-          filePath,
-          lineNumber: finding.line ?? 0,
-          matchedText: stripSurrogates((finding.matched_text ?? "").slice(0, 500)),
-          context: stripSurrogates(finding.context || ""),
-          confidence: score,
-          disclaimer,
-        });
-      }
-    }
-
-    // Batch insert all findings in one call
+    // Set scan ID on pre-collected findings and batch insert
+    for (const row of findingRows) row.scanId = scan.id;
     if (findingRows.length > 0) {
       await prisma.finding.createMany({ data: findingRows });
     }

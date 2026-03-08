@@ -38,6 +38,32 @@ function isDocsFile(filePath: string): boolean {
   );
 }
 
+const CONFIG_FILENAMES = new Set([
+  ".gitignore", ".dockerignore", ".npmignore", ".eslintignore",
+  "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
+  "tsconfig.json", "jsconfig.json", "pyproject.toml", "setup.cfg",
+  "cargo.toml", "cargo.lock", "go.sum", "go.mod",
+  "gemfile.lock", "composer.lock", "requirements.txt",
+  "pipfile.lock", ".env.example", ".env.sample",
+  "makefile", "dockerfile",
+]);
+
+function isConfigFile(filePath: string): boolean {
+  const lower = filePath.toLowerCase();
+  const basename = lower.split("/").pop() ?? lower;
+  if (CONFIG_FILENAMES.has(basename)) return true;
+  return (
+    lower.endsWith(".json") ||
+    lower.endsWith(".yaml") ||
+    lower.endsWith(".yml") ||
+    lower.endsWith(".toml") ||
+    lower.endsWith(".ini") ||
+    lower.endsWith(".cfg") ||
+    lower.endsWith(".lock") ||
+    lower.endsWith(".xml")
+  );
+}
+
 export function scoreConfidence(
   finding: IcuFinding,
   filePath: string,
@@ -51,6 +77,7 @@ export function scoreConfidence(
   // File-type modifiers
   if (isTestFile(filePath)) score -= 0.3;
   if (isDocsFile(filePath)) score -= 0.2;
+  if (isConfigFile(filePath)) score -= 0.25;
 
   // Comment context modifier
   if (finding.context && /^\s*(\/\/|#|\/\*|\*|<!--)/.test(finding.context)) {

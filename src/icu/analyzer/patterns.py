@@ -22,6 +22,7 @@ class DetectionRule:
     severity: Severity
     pattern: str
     description: str
+    code_only: bool = False  # Skip this rule for non-code files (docs, config, metadata)
 
 
 DETECTION_RULES: tuple[DetectionRule, ...] = (
@@ -89,13 +90,15 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="critical",
         pattern=r"\.ssh[/\\]",
         description="SSH directory access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-002",
         category="data_exfiltration",
-        severity="critical",
+        severity="danger",
         pattern=r"\.env\b",
         description="Environment file access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-003",
@@ -103,6 +106,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="critical",
         pattern=r"\.aws[/\\]credentials",
         description="AWS credentials access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-004",
@@ -110,6 +114,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="danger",
         pattern=r"\.gitconfig",
         description="Git config access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-005",
@@ -117,6 +122,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="critical",
         pattern=r"id_rsa",
         description="SSH private key access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-006",
@@ -124,13 +130,15 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="critical",
         pattern=r"\.gnupg",
         description="GPG keyring access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-007",
         category="data_exfiltration",
-        severity="danger",
+        severity="warning",
         pattern=r"keychain",
         description="Keychain access",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-008",
@@ -138,6 +146,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="danger",
         pattern=r"\.npmrc",
         description="NPM config access (may contain tokens)",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-009",
@@ -145,6 +154,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         severity="danger",
         pattern=r"\.pypirc",
         description="PyPI config access (may contain tokens)",
+        code_only=True,
     ),
     DetectionRule(
         rule_id="DE-010",
@@ -193,14 +203,14 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         rule_id="OB-004",
         category="obfuscation",
         severity="critical",
-        pattern=r"[\u200b\u200c\u200d\ufeff]",
-        description="Zero-width character detected (potential hidden content)",
+        pattern=r"[\u200b\u200c\u200d\ufeff]{2,}",
+        description="Multiple zero-width characters detected (potential hidden content)",
     ),
     # ── Suspicious Commands ───────────────────────────────────
     DetectionRule(
         rule_id="SC-001",
         category="suspicious_commands",
-        severity="danger",
+        severity="warning",
         pattern=r"subprocess\.(call|run|Popen)",
         description="Subprocess execution",
     ),
@@ -215,7 +225,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
         rule_id="SC-003",
         category="suspicious_commands",
         severity="danger",
-        pattern=r"exec\s*\(",
+        pattern=r"(?<!\.)exec\s*\(",
         description="Dynamic code execution via exec()",
     ),
     DetectionRule(
@@ -228,7 +238,7 @@ DETECTION_RULES: tuple[DetectionRule, ...] = (
     DetectionRule(
         rule_id="SC-005",
         category="suspicious_commands",
-        severity="danger",
+        severity="warning",
         pattern=r"child_process",
         description="Node.js child process spawning",
     ),

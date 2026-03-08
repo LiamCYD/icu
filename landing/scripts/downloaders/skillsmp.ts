@@ -4,6 +4,22 @@ import { RATE_LIMITS, USER_AGENT } from "../lib/config";
 import { safeShallowClone } from "../lib/safe-clone";
 import type { DownloadResult, PackageInfo } from "../lib/types";
 
+/** Strip /tree/... and /blob/... suffixes from GitHub URLs to get a clonable repo URL. */
+function normalizeGithubUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (!["github.com", "gitlab.com", "bitbucket.org"].includes(parsed.hostname)) return url;
+    // Match /:owner/:repo and strip everything after (tree/main/..., blob/..., etc.)
+    const match = parsed.pathname.match(/^\/([^/]+\/[^/]+)/);
+    if (match) {
+      return `${parsed.origin}${match[1]}`;
+    }
+  } catch {
+    // Invalid URL — return as-is, safeShallowClone will reject it
+  }
+  return url;
+}
+
 const limiter = new RateLimiter(RATE_LIMITS.SkillsMP.requestsPerSecond);
 
 interface SkillsmpSkill {
@@ -95,8 +111,10 @@ export async function* skillsmpDownloader(
       for (const skill of response.data.skills) {
         if (yielded >= cap) break;
 
-        const repoUrl = skill.githubUrl;
-        if (!repoUrl || seen.has(repoUrl)) continue;
+        const rawUrl = skill.githubUrl;
+        if (!rawUrl) continue;
+        const repoUrl = normalizeGithubUrl(rawUrl);
+        if (seen.has(repoUrl)) continue;
         seen.add(repoUrl);
 
         let tmpDir: string | undefined;

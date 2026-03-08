@@ -13,7 +13,22 @@ interface GlamaServer {
   repository?: string;
 }
 
-async function fetchServerList(): Promise<GlamaServer[]> {
+async function fetchServerListApi(): Promise<GlamaServer[]> {
+  await limiter.acquire();
+  const res = await fetch("https://glama.ai/api/mcp/v1/servers", {
+    headers: {
+      "User-Agent": USER_AGENT,
+      Accept: "application/json",
+    },
+  });
+  if (!res.ok) throw new Error(`Glama API listing failed: ${res.status}`);
+  const data = (await res.json()) as { servers?: GlamaServer[] } | GlamaServer[];
+  // Handle both { servers: [...] } and [...] response shapes
+  const servers = Array.isArray(data) ? data : (data.servers ?? []);
+  return servers;
+}
+
+async function fetchServerListHtml(): Promise<GlamaServer[]> {
   await limiter.acquire();
   const res = await fetch("https://glama.ai/mcp/servers", {
     headers: {
@@ -21,7 +36,7 @@ async function fetchServerList(): Promise<GlamaServer[]> {
       Accept: "text/html",
     },
   });
-  if (!res.ok) throw new Error(`Glama listing failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Glama HTML listing failed: ${res.status}`);
   const html = await res.text();
 
   const pattern = /\/mcp\/servers\/([^/"]+)\/([^/"]+)/g;
@@ -37,6 +52,19 @@ async function fetchServerList(): Promise<GlamaServer[]> {
   }
 
   return servers;
+}
+
+async function fetchServerList(): Promise<GlamaServer[]> {
+  // Try API first (more reliable), then fall back to HTML scraping
+  try {
+    const servers = await fetchServerListApi();
+    if (servers.length > 0) return servers;
+    console.warn("[glama] API returned 0 servers, trying HTML scrape");
+  } catch (err) {
+    console.warn(`[glama] API listing failed, trying HTML scrape: ${err}`);
+  }
+
+  return fetchServerListHtml();
 }
 
 async function fetchServerMetadata(author: string, name: string): Promise<GlamaServer> {
