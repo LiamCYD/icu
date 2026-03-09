@@ -36,8 +36,8 @@ export function StatCards(props: StatCardsProps) {
               <div className={`shrink-0 rounded-lg p-2.5 ${stat.bg}`}>
                 <Icon className={`h-6 w-6 ${stat.color}`} />
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="display-heading text-3xl leading-none sm:text-5xl lg:text-7xl">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="display-heading text-2xl leading-none sm:text-4xl lg:text-5xl">
                   {formatNumber(value)}
                 </span>
                 <span className="light-text text-lg leading-tight">

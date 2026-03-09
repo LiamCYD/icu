@@ -7,12 +7,21 @@ interface ConfidenceResult {
 
 const BASE_SCORES: Record<string, number> = {
   pattern_match: 0.7,
-  entropy: 0.4,
-  deobfuscation: 0.6,
+  entropy: 0.25,
+  deobfuscation: 0.3,
   known_bad_hash: 0.95,
 };
 
+/**
+ * Noise-heavy rule prefixes that generate high volumes of false positives
+ * in legitimate code (base64 assets, minified JS, hashes, etc.).
+ * These get low base confidence so they don't inflate package risk levels,
+ * but still appear in findings for transparency.
+ */
 function getBaseScore(ruleId: string): number {
+  if (ruleId.startsWith("DO-")) return BASE_SCORES.deobfuscation;
+  if (ruleId.startsWith("EN-")) return BASE_SCORES.entropy;
+  if (ruleId === "OB-001") return BASE_SCORES.deobfuscation; // base64 strings
   if (ruleId.startsWith("OB-")) return BASE_SCORES.deobfuscation;
   return BASE_SCORES.pattern_match;
 }

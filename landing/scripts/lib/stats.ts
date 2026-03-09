@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../../lib/generated/prisma/client";
+import { MIN_CONFIDENCE_FOR_RISK } from "./rule-category-map";
 
 export async function recomputeStats(prisma: PrismaClient): Promise<void> {
   const [
@@ -12,12 +13,21 @@ export async function recomputeStats(prisma: PrismaClient): Promise<void> {
   ] = await Promise.all([
     prisma.package.count(),
     prisma.scan.count(),
-    prisma.finding.count(),
+    // Only count findings above the confidence threshold — noise findings
+    // (base64 strings, high-entropy tokens, etc.) inflate the count otherwise
+    prisma.finding.count({
+      where: { confidence: { gte: MIN_CONFIDENCE_FOR_RISK } },
+    }),
     prisma.package.groupBy({ by: ["riskLevel"], _count: true }),
-    prisma.finding.groupBy({ by: ["category"], _count: true }),
+    prisma.finding.groupBy({
+      by: ["category"],
+      _count: true,
+      where: { confidence: { gte: MIN_CONFIDENCE_FOR_RISK } },
+    }),
     prisma.$queryRaw<Array<{ ruleId: string; count: bigint }>>`
       SELECT "ruleId", COUNT(*)::bigint as count
       FROM findings
+      WHERE confidence >= ${MIN_CONFIDENCE_FOR_RISK} OR confidence IS NULL
       GROUP BY "ruleId"
       ORDER BY count DESC
       LIMIT 10
